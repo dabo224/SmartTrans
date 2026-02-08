@@ -13,7 +13,7 @@ def train_model():
 
     df = pd.read_csv(data_path)
     
-    X = df[['hour', 'day_of_week', 'is_weekend', 'avg_speed']]
+    X = df[['lat', 'lng', 'hour', 'day_of_week', 'is_weekend']]
     y = df['traffic_level']
     
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)

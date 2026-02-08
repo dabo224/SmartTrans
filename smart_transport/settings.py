@@ -125,3 +125,6 @@ MODELS_ROOT = BASE_DIR / 'models'
 DATA_ROOT.mkdir(exist_ok=True)
 MODELS_ROOT.mkdir(exist_ok=True)
 
+# Email configuration for development (logs to console)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+

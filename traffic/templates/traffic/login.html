@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="fr">
 
@@ -9,44 +10,116 @@
     <style>
         :root {
             --primary: #4285F4;
-            --glass: rgba(255, 255, 255, 0.07);
-            --glass-border: rgba(255, 255, 255, 0.15);
-            --bg-blur: 25px;
+            --secondary: #34A853;
+            --accent: #FBBC05;
+            --danger: #EA4335;
+            --bg: #0f172a;
+            --glass: rgba(15, 23, 42, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --muted: #94a3b8;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #000;
             height: 100vh;
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
             overflow: hidden;
-            color: white;
-        }
-
-        .login-container {
-            background: var(--glass);
-            -webkit-backdrop-filter: blur(var(--bg-blur));
-            backdrop-filter: blur(var(--bg-blur));
-            border: 1px solid var(--glass-border);
-            padding: 45px;
-            border-radius: 28px;
-            width: 90%;
-            max-width: 420px;
-            box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.2);
-            animation: slideUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+            color: var(--text);
             position: relative;
         }
 
-        @keyframes slideUp {
+        .slideshow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            opacity: 0;
+            animation: slideAnimation 16s infinite linear;
+        }
+
+        .slide:nth-child(1) {
+            background-image: url('{% static "traffic/images/slide1.jpg" %}');
+            animation-delay: 0s;
+        }
+
+        .slide:nth-child(2) {
+            background-image: url('{% static "traffic/images/slide2.jpg" %}');
+            animation-delay: 4s;
+        }
+
+        .slide:nth-child(3) {
+            background-image: url('{% static "traffic/images/slide3.jpg" %}');
+            animation-delay: 8s;
+        }
+
+        .slide:nth-child(4) {
+            background-image: url('{% static "traffic/images/slide4.jpg" %}');
+            animation-delay: 12s;
+        }
+
+        @keyframes slideAnimation {
+            0% {
+                opacity: 0;
+                transform: scale(1);
+            }
+
+            6.25% {
+                opacity: 1;
+            }
+
+            25% {
+                opacity: 1;
+            }
+
+            31.25% {
+                opacity: 0;
+                transform: scale(1.05);
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+
+        /* Premium Glass Card */
+        .login-container {
+            background: var(--glass);
+            -webkit-backdrop-filter: blur(30px) saturate(180%);
+            backdrop-filter: blur(30px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            padding: 48px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes fadeIn {
             from {
                 opacity: 0;
-                transform: translateY(40px) scale(0.95);
+                transform: translateY(20px) scale(0.98);
             }
 
             to {
@@ -57,20 +130,25 @@
 
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 32px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 2rem;
-            font-weight: 600;
-            letter-spacing: -0.5px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .header p {
-            opacity: 0.7;
-            font-size: 0.9rem;
+            color: var(--muted);
+            font-size: 0.95rem;
             margin-top: 8px;
+            font-weight: 400;
         }
 
         .form-group {
@@ -80,28 +158,36 @@
         label {
             display: block;
             margin-bottom: 8px;
-            font-size: 0.85rem;
-            font-weight: 400;
-            opacity: 0.9;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         input {
             width: 100%;
-            padding: 12px 16px;
+            padding: 14px 16px;
             border-radius: 12px;
-            border: 1px solid var(--glass-border);
-            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            /* Subtle border */
+            background: rgba(0, 0, 0, 0.2);
             color: white;
             font-family: inherit;
+            font-size: 1rem;
             box-sizing: border-box;
             outline: none;
-            transition: all 0.3s;
+            transition: all 0.2s ease;
         }
 
         input:focus {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.2);
+            box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.15);
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
         }
 
         .btn-login {
@@ -109,62 +195,74 @@
             padding: 14px;
             border-radius: 12px;
             border: none;
-            background: white;
-            color: #1a237e;
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
+            color: white;
             font-weight: 600;
             font-size: 1rem;
             cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             transition: all 0.3s;
-            margin-top: 10px;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
         }
 
         .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            background: #f8f9fa;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.4);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         }
 
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .success-msg,
         .error-msg {
-            background: rgba(234, 67, 53, 0.2);
-            border: 1px solid rgba(234, 67, 53, 0.3);
-            color: #ff8a80;
             padding: 12px;
-            border-radius: 12px;
-            font-size: 0.85rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
             margin-bottom: 20px;
             display: none;
             text-align: center;
+            font-weight: 500;
         }
 
-        /* Abstract shapes */
-        .shape {
-            position: absolute;
-            z-index: -1;
-            filter: blur(80px);
-            border-radius: 50%;
+        .success-msg {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #4ade80;
         }
 
-        .shape-1 {
-            top: -10%;
-            left: -10%;
-            width: 40%;
-            height: 60%;
-            background: #3f51b5;
+        .error-msg {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #f87171;
         }
 
-        .shape-2 {
-            bottom: -20%;
-            right: -10%;
-            width: 50%;
-            height: 50%;
-            background: #2196f3;
+        .footer-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .footer-link:hover {
+            color: #60a5fa;
+            text-decoration: underline;
         }
     </style>
 </head>
 
 <body>
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
+    <div class="slideshow-container">
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+        <div class="slide"></div>
+    </div>
+    <!-- Removed background-overlay and shapes -->
 
     <div class="login-container">
         <div class="header">
@@ -172,41 +270,53 @@
             <p>Intelligence Géographique & Trafic</p>
         </div>
 
+        <div id="success-box" class="success-msg"></div>
         <div id="error-box" class="error-msg"></div>
 
         <form id="login-form">
             {% csrf_token %}
             <div class="form-group">
                 <label>Nom d'utilisateur</label>
-                <input type="text" id="username" required placeholder="Votre pseudo">
+                <input type="text" id="username" required placeholder="Votre pseudo" autocomplete="username">
             </div>
             <div class="form-group">
                 <label>Mot de passe</label>
-                <input type="password" id="password" required placeholder="••••••••">
+                <input type="password" id="password" required placeholder="••••••••" autocomplete="current-password">
             </div>
             <button type="submit" class="btn-login">Se connecter</button>
         </form>
 
-        <div style="text-align: center; margin-top: 20px; font-size: 0.85rem;">
-            <a href="{% url 'password_reset' %}" style="color: white; text-decoration: none; opacity: 0.7;">Mot de passe
-                oublié ?</a>
+        <div style="text-align: center; margin-top: 24px; font-size: 0.875rem;">
+            <a href="{% url 'password_reset' %}" class="footer-link">Mot de passe oublié ?</a>
         </div>
 
-        <div style="text-align: center; margin-top: 15px; font-size: 0.9rem;">
+        <div style="text-align: center; margin-top: 16px; font-size: 0.9375rem;">
             Pas de compte ? <a href="{% url 'register' %}"
-                style="color: white; font-weight: 600; text-decoration: none;">S'inscrire</a>
+                style="color: var(--primary); font-weight: 600; text-decoration: none; border-bottom: 2px solid transparent; transition: border-color 0.3s;"
+                onmouseover="this.style.borderColor='var(--primary)'"
+                onmouseout="this.style.borderColor='transparent'">S'inscrire</a>
         </div>
 
-        <p style="text-align: center; font-size: 0.75rem; opacity: 0.5; margin-top: 24px;">
+        <p style="text-align: center; font-size: 0.75rem; color: #64748b; margin-top: 32px;">
             &copy; 2026 SmartTransport. Tous droits réservés.
         </p>
     </div>
 
     <script>
+        // Check for success message from registration
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('msg')) {
+            const sb = document.getElementById('success-box');
+            sb.innerText = urlParams.get('msg');
+            sb.style.display = 'block';
+        }
+
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const eb = document.getElementById('error-box');
+            const sb = document.getElementById('success-box');
             eb.style.display = 'none';
+            sb.style.display = 'none';
 
             const payload = {
                 username: document.getElementById('username').value,

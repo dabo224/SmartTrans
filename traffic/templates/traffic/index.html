@@ -7,6 +7,7 @@
     <title>SmartTransport - Dashboard Intelligence Géographique</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #4285F4;
@@ -14,13 +15,12 @@
             --warning: #FBBC05;
             --danger: #EA4335;
             --bg: #0f172a;
-            /* Deeper dark background */
-            --glass: rgba(255, 255, 255, 0.1);
-            --glass-active: rgba(255, 255, 255, 0.2);
+            --glass: rgba(255, 255, 255, 0.05);
+            --glass-active: rgba(255, 255, 255, 0.1);
             --text: #f8fafc;
             --text-muted: #94a3b8;
             --border: rgba(255, 255, 255, 0.1);
-            --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.82);
+            --shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.75);
         }
 
         body {
@@ -31,19 +31,25 @@
             padding: 0;
             height: 100vh;
             width: 100vw;
-            display: flex;
-            flex-direction: column;
             overflow: hidden;
         }
 
         #map-container {
-            flex-grow: 1;
-            position: relative;
+            position: absolute;
+            top: 56px;
+            left: 0;
+            right: 0;
+            bottom: 0;
             width: 100%;
-            height: 100%;
+            height: calc(100vh - 56px);
         }
 
         #map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             height: 100%;
             width: 100%;
             z-index: 1;
@@ -52,94 +58,127 @@
         /* Google Maps Floating Search Bar */
         .search-container {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 20px;
+            left: 20px;
             z-index: 1000;
-            width: 392px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: var(--shadow);
+            width: 380px;
+            background: rgba(15, 23, 42, 0.6);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
-            padding: 2px 8px;
-            transition: all 0.3s;
+            padding: 6px 16px;
+            transition: all 0.3s ease;
+        }
+
+        .search-container:focus-within {
+            background: rgba(15, 23, 42, 0.85);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
+            transform: translateY(-2px);
         }
 
         .search-container input {
             border: none;
             padding: 12px;
             flex-grow: 1;
-            font-size: 16px;
+            font-size: 15px;
+            background: transparent;
             outline: none;
             color: var(--text);
+            font-family: inherit;
+        }
+
+        .search-container input::placeholder {
+            color: var(--text-muted);
         }
 
         .search-icon {
             padding: 8px;
             color: var(--text-muted);
             cursor: pointer;
+            font-size: 1.1rem;
+            transition: color 0.3s;
         }
 
         .directions-btn {
             padding: 8px;
             color: var(--primary);
-            border-left: 1px solid var(--border);
-            margin-left: 8px;
             cursor: pointer;
+            font-size: 1.4rem;
+            transition: all 0.3s;
+            margin-left: 12px;
+            filter: drop-shadow(0 0 8px rgba(66, 133, 244, 0.4));
+        }
+
+        .directions-btn:hover {
+            transform: scale(1.1) rotate(-15deg);
         }
 
         /* Sidebar / Details Panel with Glassmorphism */
         .side-panel {
             position: absolute;
-            top: 76px;
-            left: 12px;
+            top: 90px;
+            left: 20px;
             z-index: 999;
-            width: 392px;
-            max-height: calc(100vh - 100px);
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%),
-                url('https://images.unsplash.com/photo-1545143333-636a6619f74a?auto=format&fit=crop&w=1000');
-            background-size: cover;
-            background-position: center;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 16px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
+            width: 380px;
+            max-height: calc(100vh - 120px);
+            background: rgba(15, 23, 42, 0.75);
+            -webkit-backdrop-filter: blur(30px) saturate(200%);
+            backdrop-filter: blur(30px) saturate(200%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             overflow-y: auto;
             transform: translateX(0);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .side-panel.hidden {
-            transform: translateX(-420px);
+            transform: translateX(-450px) scale(0.9);
+            opacity: 0;
         }
 
         .panel-content {
-            padding: 20px;
+            padding: 28px;
         }
 
         .panel-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .panel-header h2 {
             margin: 0;
-            font-size: 1.25rem;
-            color: var(--text);
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, white, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .close-panel {
             cursor: pointer;
             color: var(--text-muted);
+            transition: color 0.2s;
+            font-size: 1.2rem;
+        }
+
+        .close-panel:hover {
+            color: white;
         }
 
         .user-top-bar {
-            background: var(--glass);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(15, 23, 42, 0.8);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            backdrop-filter: blur(12px) saturate(180%);
             padding: 8px 16px;
             border-radius: 30px;
             border: 1px solid var(--border);
@@ -151,6 +190,11 @@
             top: 12px;
             right: 12px;
             z-index: 1000;
+            transition: all 0.3s;
+        }
+
+        .user-top-bar:hover {
+            background: rgba(15, 23, 42, 0.95);
         }
 
         .user-avatar {
@@ -187,61 +231,129 @@
 
         label {
             display: block;
-            margin-bottom: 0.5rem;
-            color: var(--text);
-            font-size: 0.9rem;
+            margin-bottom: 0.6rem;
+            color: var(--text-muted);
+            font-size: 0.8rem;
             font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         input[type="number"],
         input[type="text"],
         select {
             width: 100%;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             font-family: inherit;
             box-sizing: border-box;
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(0, 0, 0, 0.2);
             color: var(--text);
+            font-size: 0.95rem;
             transition: all 0.3s;
         }
 
         input:focus,
         select:focus {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.25);
         }
 
         .btn-predict {
             width: 100%;
-            padding: 12px;
-            border-radius: 24px;
+            padding: 14px;
+            border-radius: 12px;
             border: none;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary) 0%, #2563eb 100%);
             color: white;
             font-weight: 600;
+            font-size: 1rem;
             cursor: pointer;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-            transition: background 0.2s;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            transition: all 0.3s;
+            margin-top: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
 
         .btn-predict:hover {
-            background: #1a73e8;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(37, 99, 235, 0.5);
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        }
+
+        .btn-predict:active {
+            transform: translateY(0);
+        }
+
+        /* Results & Nearby */
+        #result-box {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: none;
+            text-align: center;
+        }
+
+        #prediction-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #nearby-places-section {
+            margin-top: 2rem;
+        }
+
+        #nearby-places-section h3 {
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #nearby-places-list div {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.03);
+            margin-bottom: 6px;
+            border-radius: 8px;
+            transition: background 0.2s;
+            cursor: pointer;
+        }
+
+        #nearby-places-list div:hover {
+            background: rgba(255, 255, 255, 0.08);
         }
 
         /* Map Controls Overrides */
         .leaflet-control-zoom {
             border: none !important;
-            box-shadow: var(--shadow) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
+            border-radius: 8px !important;
+            overflow: hidden;
         }
 
         .leaflet-control-zoom a {
-            background-color: white !important;
-            color: var(--text-muted) !important;
+            background-color: rgba(15, 23, 42, 0.8) !important;
+            color: white !important;
             border: none !important;
+            width: 36px !important;
+            height: 36px !important;
+            line-height: 36px !important;
+            backdrop-filter: blur(10px);
+        }
+
+        .leaflet-control-zoom a:hover {
+            background-color: var(--primary) !important;
         }
 
         .btn-geo {
@@ -249,18 +361,35 @@
             bottom: 100px;
             right: 12px;
             z-index: 1000;
-            width: 40px;
-            height: 40px;
-            border-radius: 4px;
-            background: white;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(10px);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: var(--shadow);
-            border: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             cursor: pointer;
-            color: var(--text-muted);
-            font-size: 1.25rem;
+            color: white;
+            font-size: 1.4rem;
+            transition: all 0.3s;
+        }
+
+        .btn-geo:hover {
+            background: var(--primary);
+            transform: scale(1.05);
+        }
+
+        @media (max-width: 600px) {
+
+            .search-container,
+            .side-panel {
+                width: calc(100% - 40px);
+                left: 20px;
+                right: 20px;
+            }
         }
 
         /* Traffic Legend */
@@ -269,14 +398,17 @@
             bottom: 12px;
             right: 12px;
             z-index: 1000;
-            background: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            background: rgba(15, 23, 42, 0.8);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
             box-shadow: var(--shadow);
-            font-size: 12px;
-            color: var(--text-muted);
+            font-size: 13px;
+            color: var(--text);
             display: flex;
-            gap: 12px;
+            gap: 16px;
         }
 
         .legend-item {
@@ -292,7 +424,7 @@
         }
 
         .dot.low {
-            background: var(--danger);
+            background: var(--secondary);
         }
 
         .dot.medium {
@@ -300,7 +432,7 @@
         }
 
         .dot.high {
-            background: var(--secondary);
+            background: var(--danger);
         }
 
         /* Custom Markers */
@@ -312,7 +444,7 @@
         }
 
         .traffic-marker-icon {
-            background: var(--danger);
+            background: var(--secondary);
             border: 1px solid white;
             border-radius: 50%;
         }
@@ -322,25 +454,50 @@
         }
 
         .traffic-marker-icon.high {
-            background: var(--secondary);
+            background: var(--danger);
+        }
+
+        .marker-highlight {
+            box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.4), 0 0 20px 10px rgba(66, 133, 244, 0.6) !important;
+            z-index: 2000 !important;
+            border: 2px solid white !important;
         }
 
         #result-box {
             margin-top: 1.5rem;
-            padding: 1.25rem;
-            border-radius: 12px;
+            padding: 1.5rem;
+            border-radius: 16px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
             display: none;
             text-align: center;
-            -webkit-backdrop-filter: blur(4px);
-            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        #result-box.show {
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         #prediction-value {
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-top: 0.25rem;
+            margin-top: 0.5rem;
+            line-height: 1.4;
         }
 
         ::-webkit-scrollbar {
@@ -352,6 +509,44 @@
             border-radius: 4px;
         }
 
+        #training-alert {
+            background: rgba(251, 188, 5, 0.1);
+            border: 1px solid rgba(251, 188, 5, 0.2);
+            color: var(--warning);
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 0.875rem;
+            display: none;
+        }
+
+        #nearby-places-section {
+            margin-top: 24px;
+        }
+
+        #nearby-places-section h3 {
+            font-size: 0.9375rem;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        #nearby-places-list {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            line-height: 1.6;
+        }
+
+        #prediction-section .form-group:first-child {
+            margin-bottom: 24px;
+        }
+
+        #prediction-section .form-group:first-child small {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            display: block;
+            margin-top: 4px;
+        }
+
         @media (max-width: 600px) {
 
             .search-container,
@@ -359,19 +554,232 @@
                 width: calc(100% - 24px);
             }
         }
+
+        /* Tab Styling */
+        .panel-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.3s;
+            border-radius: 8px;
+        }
+
+        .tab-btn.active {
+            color: white;
+            background: rgba(66, 133, 244, 0.2);
+            box-shadow: 0 4px 15px rgba(66, 133, 244, 0.15);
+            border: 1px solid rgba(66, 133, 244, 0.3);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .route-summary-box {
+            margin-top: 16px;
+            padding: 18px;
+            background: linear-gradient(135deg, rgba(66, 133, 244, 0.1), rgba(66, 133, 244, 0.02));
+            border: 1px solid rgba(66, 133, 244, 0.3);
+            border-radius: 16px;
+            display: none;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(4px);
+        }
+
+        .loader {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--primary);
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes rotation {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Analytics Chart Style */
+        .chart-box {
+            margin-top: 24px;
+            padding: 24px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            display: none;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            opacity: 0.9;
+        }
+
+        /* Notifications Style */
+        #notification-container {
+            position: fixed;
+            top: 72px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 0 20px;
+        }
+
+        .notification {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 12px 16px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            pointer-events: auto;
+            animation: slideInDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.3s;
+        }
+
+        .notification.exit {
+            animation: slideOutUp 0.4s cubic-bezier(0.6, -0.28, 0.735, 0.045) forwards;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes slideOutUp {
+            from {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateY(-20px) scale(0.95);
+            }
+        }
+
+        .notif-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .notif-btn:hover {
+            filter: brightness(1.1);
+            transform: scale(1.05);
+        }
+
+        .notif-icon {
+            font-size: 1.2rem;
+            min-width: 24px;
+        }
     </style>
 </head>
 
 <body>
-    <div id="map-container">
-        <!-- User Top Bar -->
-        <div class="user-top-bar">
-            <div class="user-avatar">{{ user.username|first|upper }}</div>
-            <div style="font-size: 0.85rem; font-weight: 600;">{{ user.username }}</div>
-            <a href="{% url 'logout' %}" class="logout-link">Déconnexion</a>
+    <!-- User Top Bar -->
+    <div class="user-top-bar"
+        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 1000; color: white; height: 56px; box-sizing: border-box;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div
+                style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                {{ user.username|first|upper }}
+            </div>
+            <div style="text-align: left;">
+                <div style="font-weight: 600; font-size: 0.9rem;">{{ user.username }}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Compte SMT</div>
+            </div>
         </div>
+        <a href="{% url 'logout' %}" class="logout-link"
+            style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600;">Déconnexion</a>
+    </div>
 
+    <div id="map-container">
         <div id="map"></div>
+
+        <div id="notification-container"></div>
 
         <!-- Google-style Search Bar -->
         <div class="search-container">
@@ -387,12 +795,41 @@
         <div id="side-panel" class="side-panel">
             <div class="panel-content">
                 <div class="panel-header">
-                    <h2 id="place-name-display">Sélectionnez un lieu</h2>
+                    <h2 id="place-name-display">Smart Navigation</h2>
                     <div class="close-panel" onclick="toggleSidePanel()">✕</div>
                 </div>
 
-                <div id="prediction-section">
-                    <div class="form-group" style="margin-bottom: 24px;">
+                <div class="panel-tabs">
+                    <button id="tab-point" class="tab-btn active" onclick="switchTab('point')">Analyse Point</button>
+                    <button id="tab-route" class="tab-btn" onclick="switchTab('route')">Itinéraire IA</button>
+                </div>
+
+                <div id="route-section" class="tab-content">
+                    <div class="form-group">
+                        <label>Départ</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="start-input" placeholder="Lieu de départ (ou Ma position)">
+                            <button onclick="setStartToCurrent()" class="btn-predict"
+                                style="width: auto; padding: 0 12px; margin: 0; height: 46px;">🎯</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Destination</label>
+                        <input type="text" id="end-input" placeholder="Lieu d'arrivée">
+                    </div>
+                    <button onclick="calculateSmartRoute()" class="btn-predict">Calculer Trajet Intelligent</button>
+
+                    <div id="route-info" class="route-summary-box">
+                        <div
+                            style="font-size: 0.75rem; color: var(--primary); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px;">
+                            Optimisation IA</div>
+                        <div id="route-summary" style="font-size: 0.95rem; line-height: 1.5;">Prêt pour le calcul...
+                        </div>
+                    </div>
+                </div>
+
+                <div id="prediction-section" class="tab-content active">
+                    <div class="form-group">
                         <label>Explorer par niveau de trafic</label>
                         <div style="display: flex; gap: 8px;">
                             <input type="text" id="traffic-search" placeholder="Ex: faible, moyen, élevé"
@@ -400,8 +837,7 @@
                             <button onclick="searchTrafficLevel()" class="btn-predict"
                                 style="width: auto; padding: 0 16px; border-radius: 4px;">🔍</button>
                         </div>
-                        <small style="color: var(--text-muted); font-size: 0.75rem;">Affiche les zones correspondantes
-                            sur la carte.</small>
+                        <small>Affiche les zones correspondantes sur la carte.</small>
                     </div>
 
                     <form id="predict-form">
@@ -431,25 +867,41 @@
                     </form>
 
                     <div id="training-alert"
-                        style="display: {% if model_exists %}none{% else %}block{% endif %}; background: #fff3cd; border: 1px solid #ffeeba; color: #856404; padding: 12px; border-radius: 8px; margin-top: 15px; font-size: 0.85rem;">
+                        style="{% if model_exists %}display: none;{% else %}display: block;{% endif %}">
                         ⚠️ Le modèle IA n'est pas encore prêt.
                         <button onclick="trainModel()" class="btn-predict"
-                            style="margin-top: 8px; padding: 8px; font-size: 0.8rem; background: var(--warning); color: #202124;">Générer
+                            style="margin-top: 12px; padding: 8px; font-size: 0.8rem; background: var(--warning); color: #0f172a;">Générer
                             & Entraîner</button>
                     </div>
 
-                    <div id="result-box">
-                        <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">PRÉDICTION IA</div>
-                        <div id="prediction-value">-</div>
+                    <div id="result-box" style="transition: all 0.3s ease;">
+                        <div
+                            style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px; text-transform: uppercase;">
+                            Réponse de l'IA</div>
+                        <div id="prediction-value" style="font-size: 1.1rem; line-height: 1.4;">Cliquez sur la carte ou
+                            utilisez 🎯 pour commencer</div>
+                    </div>
+
+                    <div id="analytics-box" class="chart-box">
+                        <div class="chart-header">
+                            <span class="chart-title">📈 Tendances sur 24h</span>
+                        </div>
+                        <div style="height: 180px; width: 100%;">
+                            <canvas id="trafficTrendChart"></canvas>
+                        </div>
+                        <div
+                            style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
+                            Conseil : <span id="best-time-hint"
+                                style="color: var(--secondary); font-weight: 600;">Analyse en cours...</span>
+                        </div>
                     </div>
                 </div>
 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0;">
 
                 <div id="nearby-places-section">
-                    <h3 style="font-size: 0.9rem; margin-bottom: 12px;">🏢 À proximité</h3>
-                    <div id="nearby-places-list"
-                        style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.6;">
+                    <h3>🏢 À proximité</h3>
+                    <div id="nearby-places-list">
                         Cliquez sur la carte pour explorer...
                     </div>
                 </div>
@@ -466,30 +918,235 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Init Map (Google Maps Style)
-        const map = L.map('map', { zoomControl: false }).setView([5.3600, -4.0083], 15);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
-
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
+        // Declare global variables
+        let map;
         let userMarker = null;
         let vehicleMarkers = [];
         let placeMarkers = [];
+        let routingLayer = null;
+        let routeStartMarker = null;
+        let routeEndMarker = null;
+        let trendChart = null;
+
+        // Wait for DOM to be ready before initializing map
+        document.addEventListener('DOMContentLoaded', function () {
+            // Init Map (Google Maps Style)
+            map = L.map('map', { zoomControl: false }).setView([5.3600, -4.0083], 15);
+
+            const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+                maxZoom: 19
+            });
+
+            const esriLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19
+            });
+
+            const esriHybrid = L.layerGroup([esriSatellite, esriLabels]);
+
+            const osmMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 19
+            });
+
+            // Default to Hybrid (Satellite + Labels)
+            esriHybrid.addTo(map);
+
+            const baseMaps = {
+                "Satellite (Hybride)": esriHybrid,
+                "Plan (Classique)": osmMap
+            };
+
+            L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
+
+            L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Initialize other functions after map is ready
+            if (typeof initRealTime === 'function') initRealTime();
+            if (typeof locateUser === 'function') locateUser();
+            if (typeof animate === 'function') animate();
+            if (typeof fetchUserData === 'function') fetchUserData();
+        });
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            if (tab === 'point') {
+                document.getElementById('prediction-section').classList.add('active');
+                document.getElementById('tab-point').classList.add('active');
+                document.getElementById('place-name-display').innerText = "Analyse Point";
+            } else {
+                document.getElementById('route-section').classList.add('active');
+                document.getElementById('tab-route').classList.add('active');
+                document.getElementById('place-name-display').innerText = "Calcul d'Itinéraire";
+            }
+        }
+
+        async function setStartToCurrent() {
+            const startInput = document.getElementById('start-input');
+            startInput.value = "Localisation...";
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(async (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const name = await getPlaceName(lat, lng);
+                    startInput.value = name;
+                }, () => {
+                    startInput.value = "Abidjan, Côte d'Ivoire";
+                });
+            } else {
+                startInput.value = "Abidjan, Côte d'Ivoire";
+            }
+        }
+
+        async function geocode(query) {
+            if (!query || query.trim() === "") return null;
+            try {
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`);
+                const data = await res.json();
+                if (data.length > 0) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
+            } catch (e) {
+                console.error("Geocode error:", e);
+            }
+            return null;
+        }
+
+        async function predictPointTraffic(lat, lng) {
+            const hotspots = [
+                { lat: 5.33, lng: -4.02 }, // Plateau
+                { lat: 5.37, lng: -3.99 }, // Cocody
+                { lat: 5.39, lng: -4.03 }  // Adjamé
+            ];
+            const now = new Date();
+            const hour = now.getHours();
+            const peak = (hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19);
+
+            for (const hs of hotspots) {
+                const dist = Math.sqrt((lat - hs.lat) ** 2 + (lng - hs.lng) ** 2);
+                if (dist < 0.015) return peak ? 'high' : 'medium';
+            }
+            return 'low';
+        }
+
+        function displayRoute(route) {
+            if (routingLayer) map.removeLayer(routingLayer);
+            if (routeStartMarker) map.removeLayer(routeStartMarker);
+            if (routeEndMarker) map.removeLayer(routeEndMarker);
+
+            const latlngs = route.geometry.coordinates.map(c => [c[1], c[0]]);
+            routingLayer = L.polyline(latlngs, {
+                color: '#4285F4',
+                weight: 6,
+                opacity: 0.8,
+                lineJoin: 'round'
+            }).addTo(map);
+
+            routeStartMarker = L.marker(latlngs[0], {
+                icon: L.divIcon({ className: 'traffic-marker-icon', html: '🏁', iconSize: [16, 16] })
+            }).addTo(map).bindPopup("Départ");
+
+            routeEndMarker = L.marker(latlngs[latlngs.length - 1], {
+                icon: L.divIcon({ className: 'traffic-marker-icon', html: '📍', iconSize: [16, 16] })
+            }).addTo(map).bindPopup("Arrivée");
+
+            map.fitBounds(routingLayer.getBounds(), { padding: [50, 50] });
+        }
+
+        async function calculateSmartRoute() {
+            const startQuery = document.getElementById('start-input').value;
+            const endQuery = document.getElementById('end-input').value;
+            const summaryEl = document.getElementById('route-summary');
+            const infoBox = document.getElementById('route-info');
+
+            if (!startQuery || !endQuery) {
+                alert("Veuillez entrer un départ et une destination.");
+                return;
+            }
+
+            infoBox.style.display = 'block';
+            summaryEl.innerHTML = "<span class='loader'></span> Recherche des lieux...";
+
+            const startCoords = await geocode(startQuery);
+            const endCoords = await geocode(endQuery);
+
+            if (!startCoords || !endCoords) {
+                summaryEl.innerHTML = "❌ Impossible de localiser les adresses.";
+                return;
+            }
+
+            summaryEl.innerHTML = "🧠 Analyse des routes et du trafic IA...";
+
+            try {
+                // Fetch alternatives from OSRM
+                const url = `https://router.project-osrm.org/route/v1/driving/${startCoords[1]},${startCoords[0]};${endCoords[1]},${endCoords[0]}?overview=full&geometries=geojson&alternatives=true`;
+                const res = await fetch(url);
+                const data = await res.json();
+
+                if (!data.routes || data.routes.length === 0) {
+                    summaryEl.innerHTML = "❌ Aucun itinéraire trouvé.";
+                    return;
+                }
+
+                let bestRoute = null;
+                let minScore = Infinity;
+
+                // Evaluate each route
+                for (let i = 0; i < data.routes.length; i++) {
+                    const route = data.routes[i];
+                    const coords = route.geometry.coordinates;
+
+                    // Sample points along the route
+                    let trafficPenalty = 0;
+                    const sampleCount = 10;
+                    for (let j = 0; j < sampleCount; j++) {
+                        const idx = Math.floor(j * (coords.length / sampleCount));
+                        const point = coords[idx];
+                        const level = await predictPointTraffic(point[1], point[0]);
+                        if (level === 'high') trafficPenalty += 1800; // Large penalty for red zones
+                        else if (level === 'medium') trafficPenalty += 600;
+                    }
+
+                    const score = route.duration + trafficPenalty;
+                    if (score < minScore) {
+                        minScore = score;
+                        bestRoute = route;
+                    }
+                }
+
+                displayRoute(bestRoute);
+                const durationMin = Math.round(bestRoute.duration / 60);
+                const distKm = (bestRoute.distance / 1000).toFixed(1);
+                summaryEl.innerHTML = `✅ <b>Trajet intelligent calculé !</b><br>
+                    <div style="margin-top: 8px; display: flex; gap: 12px; font-size: 1rem;">
+                        <span>⏱️ ${durationMin} min</span>
+                        <span>🛣️ ${distKm} km</span>
+                    </div>
+                    <div style="color: var(--secondary); font-size: 0.8rem; margin-top: 8px; font-weight: 500;">
+                        ✨ L'IA a optimisé le trajet pour éviter les zones de forte congestion.
+                    </div>`;
+
+            } catch (err) {
+                console.error("Routing error:", err);
+                summaryEl.innerHTML = "❌ Erreur lors du calcul de l'itinéraire.";
+            }
+        }
 
         // Real-time Initialization
         function initRealTime() {
             const now = new Date();
-            document.getElementById('hour').value = now.getHours();
-            // JS day is 0 (Sunday) to 6 (Saturday). Our select is 0 (Monday) to 6 (Sunday)
-            let day = now.getDay() - 1;
-            if (day === -1) day = 6; // Sunday
-            document.getElementById('day_of_week').value = day;
+            const hrInput = document.getElementById('hour');
+            if (hrInput) hrInput.value = now.getHours();
+
+            const dayInput = document.getElementById('day_of_week');
+            if (dayInput) {
+                let day = now.getDay() - 1;
+                if (day === -1) day = 6; // Sunday
+                dayInput.value = day;
+            }
         }
 
         // UI Helpers
@@ -576,32 +1233,73 @@
             }
 
             userMarker.bindPopup(`<b>Position actuelle</b><br>${name}`).openPopup();
+            // Default spawn
             spawnTraffic(lat, lng);
             fetchNearbyPlaces(lat, lng);
         }
 
-        function spawnTraffic(lat, lng) {
+        // Real Traffic Simulation with OSRM
+        async function fetchRoute(startLat, startLng, endLat, endLng) {
+            try {
+                const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
+                const res = await fetch(url);
+                const data = await res.json();
+                if (data.routes && data.routes.length > 0) {
+                    return data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]); // Swap to LatLng
+                }
+            } catch (err) {
+                console.warn("OSRM Route Error:", err);
+            }
+            return null;
+        }
+
+        async function spawnTraffic(lat, lng, forcedLevel = null) {
             vehicleMarkers.forEach(m => map.removeLayer(m.marker));
             vehicleMarkers = [];
 
-            for (let i = 0; i < 12; i++) {
-                const tLat = lat + (Math.random() - 0.5) * 0.01;
-                const tLng = lng + (Math.random() - 0.5) * 0.01;
-                const status = Math.random() > 0.7 ? 'high' : (Math.random() > 0.4 ? 'medium' : 'low');
+            // Spawn fewer but smarter vehicles to respect API limits
+            const vehicleCount = 8;
 
-                const marker = L.marker([tLat, tLng], {
-                    icon: L.divIcon({
-                        className: `traffic-marker-icon ${status}`,
-                        iconSize: [10, 10]
-                    })
-                }).addTo(map);
+            for (let i = 0; i < vehicleCount; i++) {
+                // Random start around center
+                const startLat = lat + (Math.random() - 0.5) * 0.02;
+                const startLng = lng + (Math.random() - 0.5) * 0.02;
+                // Random destination further away
+                const endLat = lat + (Math.random() - 0.5) * 0.04;
+                const endLng = lng + (Math.random() - 0.5) * 0.04;
 
-                vehicleMarkers.push({
-                    marker, lat: tLat, lng: tLng,
-                    vLat: (Math.random() - 0.5) * 0.0002,
-                    vLng: (Math.random() - 0.5) * 0.0002,
-                    centerLat: lat, centerLng: lng
-                });
+                const path = await fetchRoute(startLat, startLng, endLat, endLng);
+
+                if (path && path.length > 1) {
+                    let status;
+                    if (forcedLevel) {
+                        // Bias towards forced level
+                        const rand = Math.random();
+                        if (forcedLevel === 'high') status = rand > 0.2 ? 'high' : (rand > 0.1 ? 'medium' : 'low');
+                        else if (forcedLevel === 'medium') status = rand > 0.4 ? 'medium' : (rand > 0.2 ? 'high' : 'low');
+                        else status = rand > 0.3 ? 'low' : (rand > 0.1 ? 'medium' : 'high');
+                    } else {
+                        status = Math.random() > 0.7 ? 'high' : (Math.random() > 0.4 ? 'medium' : 'low');
+                    }
+
+                    const marker = L.marker(path[0], {
+                        icon: L.divIcon({
+                            className: `traffic-marker-icon ${status}`,
+                            iconSize: [12, 12]
+                        })
+                    }).addTo(map);
+
+                    vehicleMarkers.push({
+                        marker,
+                        path: path,
+                        currentIndex: 0,
+                        speed: 0.00005 + Math.random() * 0.0001, // Adjusted for smooth interpolation
+                        progress: 0
+                    });
+
+                    // Small delay to prevent API flooding
+                    await new Promise(r => setTimeout(r, 200));
+                }
             }
         }
 
@@ -620,50 +1318,165 @@
             }
         }
 
-        async function performPrediction() {
+        // Prediction Fallback Logic
+        function getTimeBasedTrafficLevel() {
+            const hour = new Date().getHours();
+            // Rush hours: 7-9 and 17-19
+            if ((hour >= 7 && hour <= 9) || (hour >= 17 && hour <= 19)) {
+                return 'Élevé';
+            }
+            // Day time: 9-17
+            if (hour > 9 && hour < 17) {
+                return 'Moyen';
+            }
+            // Night/Early morning
+            return 'Faible';
+        }
+
+        function showPrediction(status, isFallback) {
             const valEl = document.getElementById('prediction-value');
             const popupEl = document.getElementById('popup-prediction');
 
-            document.getElementById('result-box').style.display = 'block';
+            // Normalize status (handle both Élevé and Elevé)
+            const normalizedStatus = status.replace(/Eleve/i, 'Élevé');
+
+            // Map status to color and icon
+            let color, icon, bgColor;
+            if (normalizedStatus === 'Élevé' || normalizedStatus.toLowerCase() === 'élevé') {
+                color = 'var(--danger)';
+                bgColor = 'rgba(234, 67, 53, 0.1)';
+                icon = '🔴';
+            } else if (normalizedStatus === 'Moyen' || normalizedStatus.toLowerCase() === 'moyen') {
+                color = 'var(--warning)';
+                bgColor = 'rgba(251, 188, 5, 0.1)';
+                icon = '🟡';
+            } else {
+                color = 'var(--secondary)';
+                bgColor = 'rgba(52, 168, 83, 0.1)';
+                icon = '🟢';
+            }
+
+            // Update display with icon and styled text
+            // Mapping status to icon/color for popup
+            const statusLower = normalizedStatus.toLowerCase();
+            const popupIcon = statusLower.includes('élevé') || statusLower.includes('eleve') ? '🔴' :
+                (statusLower.includes('moyen') ? '🟡' : '🟢');
+
+            valEl.innerHTML = `<span style="color:${color}">${icon}</span> <b>${normalizedStatus}</b>`;
+            valEl.style.color = color;
+            popupEl.style.background = bgColor;
+
+            if (userMarker) {
+                userMarker.getPopup().setContent(`
+                    <div style="min-width: 140px; padding: 4px;">
+                        <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Analyse Trafic</div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-size: 1.2rem;">${popupIcon}</span>
+                            <span style="font-size: 1rem; font-weight: 700; color: #1e293b;">${normalizedStatus}</span>
+                        </div>
+                    </div>
+                `).openOn(map);
+            }
+            const resultBox = document.getElementById('result-box');
+            if (resultBox) {
+                resultBox.style.background = bgColor;
+                resultBox.style.borderColor = color;
+                resultBox.style.border = `1px solid ${color}`;
+            }
+
+            if (popupEl) {
+                popupEl.innerHTML = `${icon} Trafic : <b style="color: ${color}">${normalizedStatus}</b>`;
+            }
+
+            if (isFallback) {
+                console.warn("Using fallback prediction:", normalizedStatus);
+                valEl.innerHTML += ` <span style="font-size: 0.7rem; opacity: 0.6;">(estimation)</span>`;
+            }
+        }
+
+        async function performPrediction() {
+            const valEl = document.getElementById('prediction-value');
+            const popupEl = document.getElementById('popup-prediction');
+            const resultBox = document.getElementById('result-box');
+            const coordsInput = document.getElementById('coords-display');
+
+            // Validate coordinates are set
+            if (!coordsInput.value || coordsInput.value.trim() === '') {
+                resultBox.style.display = 'block';
+                resultBox.classList.add('show');
+                valEl.innerHTML = '⚠️ <span style="font-weight: 600;">Cliquez sur la carte pour sélectionner un lieu</span>';
+                valEl.style.color = 'var(--warning)';
+                resultBox.style.background = 'rgba(251, 188, 5, 0.1)';
+                resultBox.style.borderColor = 'var(--warning)';
+                resultBox.style.border = '1px solid var(--warning)';
+                console.warn('No coordinates set. Please click on the map first.');
+                return;
+            }
+
+            resultBox.style.display = 'block';
+            resultBox.classList.add('show');
             valEl.innerText = 'Localisation & Analyse...';
             valEl.style.color = 'var(--text-muted)';
 
             const form = document.getElementById('predict-form');
             const formData = new FormData(form);
 
+            console.log('Sending prediction request with coordinates:', coordsInput.value);
+            console.log('Hour:', formData.get('hour'), 'Day:', formData.get('day_of_week'));
+
             try {
                 const res = await fetch('/predict/', { method: 'POST', body: formData });
                 const data = await res.json();
 
+                console.log('Prediction response:', data);
+
                 if (data.error) {
-                    const errorMsg = data.error.includes('Model not trained') ? 'IA non entraînée' : data.error;
-                    valEl.innerText = errorMsg;
-                    if (popupEl) popupEl.innerText = errorMsg;
+                    console.error('Prediction error:', data.error);
+                    // Fallback on error
+                    showPrediction(getTimeBasedTrafficLevel(), true);
                     return;
                 }
 
                 if (data.prediction) {
-                    const status = data.prediction;
-                    const color = status === 'Elevé' ? 'var(--secondary)' :
-                        status === 'Moyen' ? 'var(--warning)' : 'var(--danger)';
+                    console.log('Showing prediction:', data.prediction);
+                    showPrediction(data.prediction, false);
 
-                    valEl.innerText = "Trafic : " + status;
-                    valEl.style.color = color;
+                    // Update map traffic markers based on prediction
+                    const latLng = coordsInput.value.split(',').map(Number);
+                    const level = data.prediction.toLowerCase().includes('élevé') || data.prediction.toLowerCase().includes('eleve') ? 'high' :
+                        (data.prediction.toLowerCase().includes('moyen') ? 'medium' : 'low');
+                    spawnTraffic(latLng[0], latLng[1], level);
 
-                    if (popupEl) {
-                        popupEl.innerHTML = `Trafic : <b style="color: ${color}">${status}</b>`;
-                    }
+                    // Update analytics chart
+                    updateTrafficChart(latLng[0], latLng[1]);
+                } else {
+                    console.warn('No prediction in response');
+                    const fallback = getTimeBasedTrafficLevel();
+                    showPrediction(fallback, true);
+
+                    const latLng = coordsInput.value.split(',').map(Number);
+                    const level = fallback.toLowerCase().includes('élevé') ? 'high' : (fallback.toLowerCase().includes('moyen') ? 'medium' : 'low');
+                    spawnTraffic(latLng[0], latLng[1], level);
+
+                    updateTrafficChart(latLng[0], latLng[1]);
                 }
             } catch (err) {
-                valEl.innerText = 'Erreur service IA';
-                valEl.style.color = 'var(--danger)';
+                console.error('Network/fetch error:', err);
+                // Fallback on network/model error
+                showPrediction(getTimeBasedTrafficLevel(), true);
             }
         }
 
         // Event Listeners
         map.on('click', async (e) => {
+            // Auto-switch to point analysis tab
+            switchTab('point');
+
             await updatePositionInfo(e.latlng.lat, e.latlng.lng);
-            performPrediction(); // Auto-predict on click too
+            // Small delay to ensure coordinates are set in the hidden input
+            setTimeout(() => {
+                performPrediction(); // Auto-predict on click
+            }, 100);
         });
 
         document.getElementById('map-search').addEventListener('keypress', (e) => {
@@ -695,12 +1508,41 @@
             performPrediction();
         });
 
+        // Animation Loop for Real Routes
         function animate() {
-            vehicleMarkers.forEach(p => {
-                p.lat += p.vLat; p.lng += p.vLng;
-                if (Math.abs(p.lat - p.centerLat) > 0.008) p.vLat *= -1;
-                if (Math.abs(p.lng - p.centerLng) > 0.008) p.vLng *= -1;
-                p.marker.setLatLng([p.lat, p.lng]);
+            vehicleMarkers.forEach(v => {
+                if (v.path && v.path.length > 1) {
+
+                    // Move towards next point
+                    const start = v.path[v.currentIndex];
+                    const end = v.path[v.currentIndex + 1];
+
+                    if (!start || !end) return;
+
+                    const dx = end[0] - start[0];
+                    const dy = end[1] - start[1];
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist > 0) {
+                        v.progress += v.speed / dist; // Normalize speed
+                    } else {
+                        v.progress = 1;
+                    }
+
+                    if (v.progress >= 1) {
+                        v.progress = 0;
+                        v.currentIndex++;
+                        if (v.currentIndex >= v.path.length - 1) {
+                            // Reset when done (or remove)
+                            v.currentIndex = 0;
+                            // reverse for continuous loop or just restart
+                        }
+                    }
+
+                    const currentLat = start[0] + (end[0] - start[0]) * v.progress;
+                    const currentLng = start[1] + (end[1] - start[1]) * v.progress;
+                    v.marker.setLatLng([currentLat, currentLng]);
+                }
             });
             requestAnimationFrame(animate);
         }
@@ -719,7 +1561,7 @@
                 ];
 
                 hotspots.forEach(hs => {
-                    const color = hs.level === 'high' ? '#34A853' : '#FBBC05';
+                    const color = hs.level === 'high' ? '#EA4335' : '#FBBC05'; // Red for high
                     const circle = L.circle([hs.lat, hs.lng], {
                         color, fillColor: color, fillOpacity: 0.3, radius: 800, weight: 1
                     }).addTo(map);
@@ -750,10 +1592,10 @@
             let levelKey = 'medium';
 
             if (query === 'faible') {
-                levelColor = '#EA4335'; // Red for Low
+                levelColor = '#34A853'; // Green for Low
                 levelKey = 'low';
             } else if (query === 'élevé' || query === 'eleve') {
-                levelColor = '#34A853'; // Green for High
+                levelColor = '#EA4335'; // Red for High
                 levelKey = 'high';
             }
 
@@ -784,11 +1626,15 @@
                 const vStatus = v.marker.options.icon.options.className.includes('high') ? 'high' :
                     (v.marker.options.icon.options.className.includes('medium') ? 'medium' : 'low');
 
-                if (vStatus === levelKey) {
-                    v.marker.setOpacity(1.0);
-                    v.marker.getElement().style.transform += ' scale(1.5)';
-                } else {
-                    v.marker.setOpacity(0.3);
+                const markerEl = v.marker.getElement();
+                if (markerEl) {
+                    if (vStatus === levelKey) {
+                        v.marker.setOpacity(1.0);
+                        markerEl.classList.add('marker-highlight');
+                    } else {
+                        v.marker.setOpacity(0.3);
+                        markerEl.classList.remove('marker-highlight');
+                    }
                 }
             });
 
@@ -796,15 +1642,325 @@
             showingTraffic = true;
         }
 
+        async function updateTrafficChart(lat, lng) {
+            const chartBox = document.getElementById('analytics-box');
+            chartBox.style.display = 'block';
+
+            const ctx = document.getElementById('trafficTrendChart').getContext('2d');
+            const hours = Array.from({ length: 24 }, (_, i) => i + "h");
+
+            let trendValues = [];
+            const dayOfWeek = document.getElementById('day_of_week').value;
+
+            try {
+                const response = await fetch(`/api/predict-trend/?lat=${lat}&lng=${lng}&day_of_week=${dayOfWeek}`);
+                const data = await response.json();
+                if (data.trend) {
+                    trendValues = data.trend;
+                } else {
+                    throw new Error("No trend data");
+                }
+            } catch (err) {
+                console.warn("Falling back to simulated trend:", err);
+                // Fallback simulation if API fails or model not ready
+                const hotspotData = [
+                    { lat: 5.33, lng: -4.02 }, { lat: 5.37, lng: -3.99 }, { lat: 5.39, lng: -4.03 }
+                ];
+                let isHotspot = hotspotData.some(hs => Math.sqrt((lat - hs.lat) ** 2 + (lng - hs.lng) ** 2) < 0.015);
+                trendValues = Array.from({ length: 24 }, (_, h) => {
+                    let base = ((h >= 7 && h <= 9) || (h >= 17 && h <= 19)) ? (isHotspot ? 85 : 65) : (isHotspot ? 40 : 20);
+                    return base + Math.random() * 10;
+                });
+            }
+
+            if (trendChart) trendChart.destroy();
+
+            trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: hours,
+                    datasets: [{
+                        label: 'Intensité du trafic',
+                        data: trendValues,
+                        borderColor: '#4285F4',
+                        backgroundColor: (context) => {
+                            const chart = context.chart;
+                            const { ctx, chartArea } = chart;
+                            if (!chartArea) return null;
+                            const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                            gradient.addColorStop(0, 'rgba(66, 133, 244, 0)');
+                            gradient.addColorStop(1, 'rgba(66, 133, 244, 0.4)');
+                            return gradient;
+                        },
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 3,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointHoverBackgroundColor: '#4285F4',
+                        pointHoverBorderColor: '#fff',
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: 'rgba(255, 255, 255, 0.1)',
+                            borderWidth: 1,
+                            padding: 10,
+                            callbacks: {
+                                label: function (context) {
+                                    let level = context.parsed.y > 65 ? 'Élevé' : (context.parsed.y > 35 ? 'Moyen' : 'Faible');
+                                    return ` Intensité : ${level}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            display: false,
+                            min: 0,
+                            max: 100
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 },
+                                maxRotation: 0,
+                                autoSkip: true,
+                                maxTicksLimit: 6
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+
+            // Find best time to travel (lowest values in next 6h window or global min)
+            let currentHour = new Date().getHours();
+            let bestHour = (currentHour + 1) % 24;
+            let minVal = Infinity;
+
+            for (let i = 1; i <= 6; i++) {
+                let h = (currentHour + i) % 24;
+                if (trendValues[h] < minVal) {
+                    minVal = trendValues[h];
+                    bestHour = h;
+                }
+            }
+
+            const hintEl = document.getElementById('best-time-hint');
+            hintEl.innerText = `Partez vers ${bestHour}h pour éviter le trafic.`;
+        }
+
+        // Notification System
+        function showNotification(message, lat, lng, type = 'warning') {
+            const container = document.getElementById('notification-container');
+            const notif = document.createElement('div');
+            notif.className = 'notification';
+
+            const icons = { 'warning': '⚠️', 'error': '🚫', 'success': '✅', 'info': '💡' };
+
+            notif.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span class="notif-icon">${icons[type] || '🔔'}</span>
+                    <div style="font-size: 0.85rem; line-height: 1.4;">${message}</div>
+                </div>
+                <button class="notif-btn" onclick="goToIncident(${lat}, ${lng}, this.parentElement)">Voir</button>
+            `;
+
+            container.appendChild(notif);
+
+            // Auto-hide after 8 seconds
+            setTimeout(() => {
+                if (notif.parentElement) {
+                    notif.classList.add('exit');
+                    setTimeout(() => notif.remove(), 400);
+                }
+            }, 8000);
+        }
+
+        function goToIncident(lat, lng, notifEl) {
+            map.flyTo([lat, lng], 16, { duration: 1.5 });
+            L.circleMarker([lat, lng], {
+                radius: 20,
+                color: '#EA4335',
+                fillOpacity: 0.3,
+                weight: 2
+            }).addTo(map).fadeOut = function () {
+                let op = 0.3;
+                let timer = setInterval(() => {
+                    op -= 0.01;
+                    this.setStyle({ fillOpacity: op, opacity: op * 2 });
+                    if (op <= 0) {
+                        clearInterval(timer);
+                        map.removeLayer(this);
+                    }
+                }, 50);
+            };
+
+            const pulse = L.circleMarker([lat, lng], { radius: 20, color: '#EA4335' }).addTo(map);
+            let pRadius = 20;
+            let pTimer = setInterval(() => {
+                pRadius += 1;
+                pulse.setRadius(pRadius);
+                pulse.setStyle({ opacity: 1 - (pRadius - 20) / 30, fillOpacity: 0.5 - (pRadius - 20) / 60 });
+                if (pRadius > 50) {
+                    clearInterval(pTimer);
+                    map.removeLayer(pulse);
+                }
+            }, 20);
+
+            // Remove notification
+            notifEl.classList.add('exit');
+            setTimeout(() => notifEl.remove(), 400);
+        }
+
+        function simulateRandomIncident() {
+            const hotspots = [
+                { name: "Plateau", lat: 5.328, lng: -4.018, msg: "Blocage majeur détecté au Plateau (Boulevard de la République)." },
+                { name: "Cocody", lat: 5.358, lng: -3.988, msg: "Ralentissement important vers le Lycée Technique." },
+                { name: "Adjamé", lat: 5.388, lng: -4.028, msg: "Congestion critique signalée au Forum d'Adjamé." },
+                { name: "Riviera", lat: 5.348, lng: -3.948, msg: "Incident sur le Boulevard Mitterrand, trafic dévié." }
+            ];
+
+            const event = hotspots[Math.floor(Math.random() * hotspots.length)];
+            showNotification(event.msg, event.lat, event.lng);
+        }
+
+        // Start periodic alerts simulation
+        setTimeout(() => {
+            simulateRandomIncident(); // Trigger first one quickly
+            setInterval(simulateRandomIncident, 90000); // Repetitive simulation every 1.5 minutes
+        }, 15000);
+
         document.getElementById('traffic-search').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') searchTrafficLevel();
         });
 
-        window.onload = () => {
-            initRealTime();
-            locateUser();
-            animate();
-        };
+        async function fetchUserData() {
+            try {
+                const response = await fetch('/api/user-data/');
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    updateFavoritesList(data.favorites);
+                    updateHistoryList(data.history);
+                }
+            } catch (error) {
+                console.error('Error fetching user data:', error);
+            }
+        }
+
+        function updateFavoritesList(favorites) {
+            const container = document.getElementById('favorites-list');
+            const section = document.getElementById('favorites-section');
+
+            if (favorites.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = favorites.map(fav => `
+                <div onclick="useRoute('${fav.source}', '${fav.destination}')" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer; transition: background 0.2s; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: var(--warning);">★</span>
+                        <span style="font-size: 0.9rem; font-weight: 500;">${fav.name}</span>
+                    </div>
+                    <button onclick="deleteFavorite(event, ${fav.id})" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 0 4px;">&times;</button>
+                </div>
+            `).join('');
+        }
+
+        function updateHistoryList(history) {
+            const container = document.getElementById('history-list');
+            const section = document.getElementById('history-section');
+
+            if (history.length === 0) {
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            container.innerHTML = history.map(item => `
+                <div onclick="useRoute('${item.source}', '${item.destination}')" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
+                    <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                        <span>🕒</span>
+                        <span>${new Date(item.timestamp).toLocaleDateString()}</span>
+                    </div>
+                    <div style="font-size: 0.9rem; margin-top: 2px;">${item.source} ➝ ${item.destination}</div>
+                </div>
+            `).join('');
+        }
+
+        function useRoute(source, destination) {
+            document.getElementById('start-input').value = source;
+            document.getElementById('end-input').value = destination;
+        }
+
+        async function saveFavorite() {
+            const name = prompt("Nom du favori (ex: Maison) :");
+            if (!name) return;
+
+            const source = document.getElementById('start-input').value || "Ma position";
+            const destination = document.getElementById('end-input').value || "Destination";
+
+            try {
+                const response = await fetch('/api/add-favorite/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ name, source, destination })
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    fetchUserData(); // Refresh list
+                    alert('Favori ajouté !');
+                } else {
+                    alert('Erreur: ' + data.message);
+                }
+            } catch (error) {
+                alert('Erreur système');
+            }
+        }
+
+        async function deleteFavorite(event, id) {
+            event.stopPropagation(); // Prevent clicking the parent div
+            if (!confirm('Supprimer ce favori ?')) return;
+
+            try {
+                const response = await fetch(`/api/delete-favorite/${id}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+
+                if (response.ok) {
+                    fetchUserData();
+                }
+            } catch (error) {
+                console.error('Error deleting:', error);
+            }
+        }
+
     </script>
 </body>
 

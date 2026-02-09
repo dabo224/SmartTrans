@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         :root {
             --primary: #2D6A4F;
@@ -184,6 +185,12 @@
             overflow-y: auto;
             position: relative;
             background: var(--bg-body);
+            transition: padding 0.3s;
+        }
+
+        .content-area.full-bleed {
+            padding: 0;
+            overflow-y: hidden;
         }
 
         .app-section {
@@ -317,6 +324,27 @@
             }
         }
 
+        /* Transitions for Collapsible Card */
+        #route-card-content {
+            padding: 20px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 800px;
+            opacity: 1;
+        }
+
+        .itineraires-sidebar.collapsed #route-card-content {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .itineraires-sidebar.collapsed #card-toggle-icon {
+            transform: rotate(-90deg);
+        }
+
         .btn-predict {
             width: 100%;
             padding: 14px;
@@ -390,11 +418,25 @@
         }
 
         /* Map Controls Overrides */
+        /* Center zoom control vertically on the right */
+        .leaflet-top.leaflet-right {
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: center !important;
+            pointer-events: none !important;
+            /* Allow clicks to pass through empty space */
+        }
+
         .leaflet-control-zoom {
             border: none !important;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important;
             border-radius: 8px !important;
             overflow: hidden;
+            margin: 0 12px 0 0 !important;
+            /* Right margin only */
+            pointer-events: auto !important;
+            /* Re-enable clicks on the buttons */
         }
 
         .leaflet-control-zoom a {
@@ -405,6 +447,65 @@
             height: 36px !important;
             line-height: 36px !important;
             backdrop-filter: blur(10px);
+        }
+
+        /* Vehicle Markers */
+        .traffic-marker-icon {
+            background: white;
+            border-radius: 50%;
+            border: 2px solid #555;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+            transition: transform 0.2s;
+        }
+
+        .traffic-marker-icon.low {
+            background: #34A853;
+            border-color: #206d35;
+        }
+
+        .traffic-marker-icon.medium {
+            background: #FBBC05;
+            border-color: #b88a04;
+        }
+
+        .traffic-marker-icon.high {
+            background: #EA4335;
+            border-color: #a82e24;
+        }
+
+        .traffic-marker-icon::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+
+        /* Map Selection Button */
+        .map-select-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.2s;
+        }
+
+        .map-select-btn:hover,
+        .map-select-btn.active {
+            color: var(--primary);
+        }
+
+        /* Crosshair cursor when selecting */
+        .leaflet-container.crosshair-cursor {
+            cursor: crosshair !important;
         }
 
         .leaflet-control-zoom a:hover {
@@ -880,27 +981,27 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <span class="nav-icon">📊</span> SmartTrans
+                <i data-lucide="bar-chart-3" class="nav-icon"></i> SmartTrans
             </div>
 
             <nav class="sidebar-nav">
                 <div class="nav-group">
                     <div class="nav-label">Menu Principal</div>
                     <div class="nav-item active" onclick="switchAppSection('principal')">
-                        <span class="nav-icon">🏠</span> <span>Principal</span>
+                        <i data-lucide="layout-dashboard" class="nav-icon"></i> <span>Principal</span>
                     </div>
                     <div class="nav-item" onclick="switchAppSection('itineraires')">
-                        <span class="nav-icon">🗺️</span> <span>Itinéraires</span>
+                        <i data-lucide="map" class="nav-icon"></i> <span>Itinéraires</span>
                     </div>
                     <div class="nav-item" onclick="switchAppSection('analyse')">
-                        <span class="nav-icon">📈</span> <span>Analyse</span>
+                        <i data-lucide="trending-up" class="nav-icon"></i> <span>Analyse</span>
                     </div>
                 </div>
 
                 <div class="nav-group">
                     <div class="nav-label">Paramètres</div>
                     <div class="nav-item" onclick="switchAppSection('autres')">
-                        <span class="nav-icon">⚙️</span> <span>Réglages</span>
+                        <i data-lucide="settings" class="nav-icon"></i> <span>Réglages</span>
                     </div>
                 </div>
             </nav>
@@ -941,8 +1042,9 @@
                 <div id="section-principal" class="app-section active">
                     <div class="page-header">
                         <h1 class="page-title">Statistiques Globales</h1>
-                        <p class="page-subtitle">Vue d'ensemble du trafic et des opérations en temps réel.</p>
+                        <p class="page-subtitle">Vue d'overview du trafic et des opérations en temps réel.</p>
                     </div>
+
 
                     <div class="stats-grid">
                         <div class="card stat-card">
@@ -978,58 +1080,77 @@
                 <!-- Section: Itinéraires -->
                 <div id="section-itineraires" class="app-section">
                     <div id="itineraires-layout"
-                        style="display: grid; grid-template-columns: 380px 1fr; gap: 24px; height: calc(100vh - 160px);">
-                        <div class="itineraires-sidebar">
-                            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
-                                <h3 style="margin-top: 0;">Itinéraire Intelligent</h3>
-                                <p
-                                    style="font-size: 0.9rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 24px;">
-                                    L'IA optimise votre trajet en temps réel.</p>
-
-                                <div class="form-group">
-                                    <label>Départ</label>
-                                    <div style="display: flex; gap: 8px;">
-                                        <input type="text" id="start-input" placeholder="Point de départ">
-                                        <button onclick="setStartToCurrent()" class="btn-primary"
-                                            style="padding: 0 12px; height: 46px;">🎯</button>
+                        style="position: relative; height: calc(100vh - var(--topbar-height)); background: #eee;">
+                        <div id="route-card-container" class="itineraires-sidebar collapsed"
+                            style="position: absolute; top: 20px; left: 20px; z-index: 1000; width: 360px; max-height: calc(100% - 40px); pointer-events: none; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);">
+                            <div class="card"
+                                style="height: auto; display: flex; flex-direction: column; background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1); pointer-events: auto; padding: 0; overflow: hidden;">
+                                <!-- Card Header (Toggle) -->
+                                <div id="route-card-header"
+                                    style="padding: 20px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(0,0,0,0.05); position: relative; z-index: 1010;">
+                                    <div style="display: flex; align-items: center; gap: 12px; pointer-events: none;">
+                                        <i data-lucide="car"
+                                            style="width: 20px; height: 20px; color: var(--primary);"></i>
+                                        <h3 style="margin: 0; font-size: 1.1rem;">Itinéraire Intelligent</h3>
                                     </div>
-                                </div>
-                                <div class="form-group">
-                                    <label>Destination</label>
-                                    <input type="text" id="end-input" placeholder="Où allez-vous ?">
+                                    <i data-lucide="chevron-down" id="card-toggle-icon"
+                                        style="transition: transform 0.3s; pointer-events: none; width: 20px; height: 20px;"></i>
                                 </div>
 
-                                <button onclick="calculateSmartRoute()" class="btn-primary"
-                                    style="width: 100%; margin-top: 8px;">Calculer le Trajet IA</button>
+                                <!-- Collapsible Content -->
+                                <div id="route-card-content" style="overflow-y: auto;">
+                                    <p
+                                        style="font-size: 0.9rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 24px;">
+                                        L'IA optimise votre trajet en temps réel.</p>
 
-                                <div id="route-info" class="route-summary-box" style="margin-top: 24px; flex-grow: 1;">
-                                    <div id="route-summary" style="font-size: 0.95rem;">Prêt pour le calcul...</div>
-                                </div>
+                                    <div class="form-group">
+                                        <label>Départ</label>
+                                        <div style="display: flex; gap: 8px; width: 100%;">
+                                            <div style="position: relative; flex-grow: 1;">
+                                                <input type="text" id="start-input" placeholder="Point de départ"
+                                                    style="width: 100%; padding-right: 30px;">
+                                                <button class="map-select-btn" onclick="toggleMapSelection('start')"
+                                                    title="Choisir sur la carte"
+                                                    style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%);">
+                                                    <i data-lucide="crosshair"></i>
+                                                </button>
+                                            </div>
+                                            <button onclick="setStartToCurrent()" class="btn-primary"
+                                                style="padding: 0 12px; height: 46px; display: flex; align-items: center; justify-content: center;">
+                                                <i data-lucide="map-pin" style="width: 18px; height: 18px;"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Destination</label>
+                                        <div style="position: relative;">
+                                            <input type="text" id="end-input" placeholder="Où allez-vous ?"
+                                                style="width: 100%; padding-right: 30px;">
+                                            <button class="map-select-btn" onclick="toggleMapSelection('end')"
+                                                title="Choisir sur la carte"
+                                                style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%);">
+                                                <i data-lucide="crosshair"></i>
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                <div class="status-card show" id="current-status-card"
-                                    style="margin-top: auto; background: #F8F9FA;">
-                                    <div class="status-badge" style="background: var(--primary); color: white;">Direct
+                                    <button onclick="calculateSmartRoute()" class="btn-primary"
+                                        style="width: 100%; margin-top: 8px;">Calculer le Trajet IA</button>
+
+                                    <div id="route-info" class="route-summary-box"
+                                        style="margin-top: 24px; flex-grow: 1;">
+                                        <div id="route-summary" style="font-size: 0.95rem;">Prêt pour le calcul...</div>
                                     </div>
-                                    <div class="status-level">
-                                        <span id="status-icon">🔍</span>
-                                        <span id="status-text" style="font-size: 1.1rem;">Prêt</span>
-                                    </div>
-                                    <div id="status-location"
-                                        style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">En attente
-                                        de destination</div>
+
+
                                 </div>
                             </div>
                         </div>
 
-                        <div class="map-container-wrap card" style="padding: 0; position: relative; overflow: hidden;">
+                        <div class="map-container-wrap"
+                            style="width: 100%; height: 100%; position: absolute; top: 0; left: 0; z-index: 0;">
                             <div id="map" style="width: 100%; height: 100%;"></div>
-                            <button class="btn-geo" onclick="locateUser()"
-                                style="bottom: 20px; right: 20px;">🎯</button>
-                            <div class="traffic-legend" style="bottom: 20px; left: 20px;">
-                                <div class="legend-item"><span class="dot low"></span> Fluide</div>
-                                <div class="legend-item"><span class="dot medium"></span> Moyen</div>
-                                <div class="legend-item"><span class="dot high"></span> Saturé</div>
-                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -1044,7 +1165,7 @@
                     <div style="display: grid; grid-template-columns: 350px 1fr; gap: 32px;">
                         <div class="card">
                             <h3 style="margin-top: 0;">Configuration</h3>
-                            <form id="predict-form">
+                            <form id="predict-form" onsubmit="event.preventDefault(); performPrediction();">
                                 {% csrf_token %}
                                 <input type="hidden" id="coords-display" name="coords-display">
                                 <div class="form-group">
@@ -1065,9 +1186,9 @@
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label>Vitesse Cible (km/h)</label>
-                                    <input type="number" id="avg_speed" name="avg_speed" value="30"
-                                        style="background: #F1F3F5;">
+                                    <label>Ville</label>
+                                    <input type="text" id="city-input" name="city-input"
+                                        placeholder="Ex: Cote d'Ivoire, Abidjan" style="background: #F1F3F5;">
                                 </div>
                                 <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">Prédire
                                     le Trafic</button>
@@ -1079,10 +1200,10 @@
                             <div id="result-box"
                                 style="margin-bottom: 32px; padding: 24px; background: #F8F9FA; border-radius: 16px; border: 1px dashed var(--border);">
                                 <div id="prediction-value" style="font-weight: 500; color: var(--text-muted);">
-                                    Sélectionnez une zone sur la carte (Itinéraires) pour activer l'analyse détaillée.
+                                    Entrez une ville et cliquez sur "Prédire le Trafic" pour voir l'analyse.
                                 </div>
                             </div>
-                            <div style="height: 300px;">
+                            <div id="analytics-box" style="height: 300px; display: none;">
                                 <canvas id="trafficTrendChart"></canvas>
                             </div>
                         </div>
@@ -1097,17 +1218,23 @@
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
-                        <div class="card">
+                        <div id="favorites-section" class="card">
                             <div
                                 style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h3 style="margin: 0;">⭐ Favoris</h3>
+                                <h3 style="margin: 0; display: flex; align-items: center; gap: 10px;">
+                                    <i data-lucide="star" style="width: 20px; height: 20px; color: var(--warning);"></i>
+                                    Favoris
+                                </h3>
                                 <button onclick="saveFavorite()" class="btn-primary"
                                     style="padding: 6px 12px; font-size: 0.8rem;">Enregistrer Actuel</button>
                             </div>
                             <div id="favorites-list">Chargement des favoris...</div>
                         </div>
                         <div class="card">
-                            <h3 style="margin-bottom: 20px;">🕒 Historique des Recherches</h3>
+                            <h3 style="margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                                <i data-lucide="history" style="width: 20px; height: 20px; color: var(--primary);"></i>
+                                Historique des Recherches
+                            </h3>
                             <div id="history-list">Chargement de l'historique...</div>
                         </div>
                     </div>
@@ -1151,17 +1278,32 @@
             esriHybrid.addTo(map);
             const baseMaps = { "Satellite (Hybride)": esriHybrid, "Plan (Classique)": osmMap };
             L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
-            L.control.zoom({ position: 'bottomright' }).addTo(map);
+            L.control.zoom({ position: 'topright' }).addTo(map);
 
             // Init Main Chart
             initMainChart();
-
-            // Initialize other functions after map is ready
             if (typeof initRealTime === 'function') initRealTime();
             if (typeof locateUser === 'function') locateUser();
             if (typeof animate === 'function') animate();
             if (typeof fetchUserData === 'function') fetchUserData();
+
+            // Card Toggle Listener
+            const header = document.getElementById('route-card-header');
+            if (header) {
+                header.addEventListener('click', toggleRouteCard);
+            }
+
+            // Init Map Interaction
+            initMapInteraction();
+
+            // Initialize Lucide Icons
+            lucide.createIcons();
         });
+
+        function toggleRouteCard() {
+            const container = document.getElementById('route-card-container');
+            container.classList.toggle('collapsed');
+        }
 
         function switchAppSection(sectionId) {
             // Update Sidebar UI
@@ -1179,6 +1321,12 @@
             const activeSection = document.getElementById(`section-${sectionId}`);
             if (activeSection) {
                 activeSection.classList.add('active');
+            }
+
+            // Special layout for map
+            const contentArea = document.querySelector('.content-area');
+            if (contentArea) {
+                contentArea.classList.toggle('full-bleed', sectionId === 'itineraires');
             }
 
             // Update Header Title
@@ -1514,17 +1662,30 @@
             vehicleMarkers = [];
 
             // Spawn fewer but smarter vehicles to respect API limits
-            const vehicleCount = 8;
+            const vehicleCount = 15;
 
             for (let i = 0; i < vehicleCount; i++) {
-                // Random start around center
-                const startLat = lat + (Math.random() - 0.5) * 0.02;
-                const startLng = lng + (Math.random() - 0.5) * 0.02;
-                // Random destination further away
+                // Random start VERY close to center (approx 800m radius)
+                const startLat = lat + (Math.random() - 0.5) * 0.008;
+                const startLng = lng + (Math.random() - 0.5) * 0.008;
+                // Random destination further away (approx 4km radius)
                 const endLat = lat + (Math.random() - 0.5) * 0.04;
                 const endLng = lng + (Math.random() - 0.5) * 0.04;
 
-                const path = await fetchRoute(startLat, startLng, endLat, endLng);
+                let path = await fetchRoute(startLat, startLng, endLat, endLng);
+
+                // Fallback if OSRM fails (straight line interpolation)
+                if (!path || path.length < 2) {
+                    path = [];
+                    const steps = 20;
+                    for (let j = 0; j <= steps; j++) {
+                        const t = j / steps;
+                        path.push([
+                            startLat + (endLat - startLat) * t,
+                            startLng + (endLng - startLng) * t
+                        ]);
+                    }
+                }
 
                 if (path && path.length > 1) {
                     let status;
@@ -1549,7 +1710,8 @@
                         marker,
                         path: path,
                         currentIndex: 0,
-                        speed: 0.00005 + Math.random() * 0.0001, // Adjusted for smooth interpolation
+                        // Realistic speed: approx 0.000001 - 0.000003 degrees per frame (~30-60 km/h)
+                        speed: 0.0000015 + Math.random() * 0.0000025,
                         progress: 0
                     });
 
@@ -1589,40 +1751,63 @@
             return 'Faible';
         }
 
-        function showPrediction(status, isFallback) {
+        function showPrediction(status, isFallback, city = "") {
             const valEl = document.getElementById('prediction-value');
+            const boxEl = document.getElementById('result-box');
+
+            // Style the box
+            if (boxEl) {
+                boxEl.style.border = 'none';
+                boxEl.style.boxShadow = '0 4px 12px rgba(0,0,0,0.05)';
+                boxEl.style.background = '#fff';
+            }
 
             // Normalize status
             const normalizedStatus = status.replace(/Eleve/i, 'Élevé');
 
             // Map status to color and icon
-            let color, icon, bgColor;
+            let color, icon, bgColor, advice;
             if (normalizedStatus.toLowerCase().includes('élevé') || normalizedStatus.toLowerCase().includes('eleve')) {
                 color = '#EA4335';
                 bgColor = 'rgba(234, 67, 53, 0.1)';
-                icon = '🔴';
+                icon = 'alert-circle';
+                advice = "Trafic dense prévu. Privilégiez les transports en commun ou reportez votre déplacement.";
             } else if (normalizedStatus.toLowerCase().includes('moyen')) {
                 color = '#FBBC05';
                 bgColor = 'rgba(251, 188, 5, 0.1)';
-                icon = '🟡';
+                icon = 'minus-circle';
+                advice = "Trafic modéré. Temps de trajet légèrement rallongé.";
             } else {
                 color = '#34A853';
                 bgColor = 'rgba(52, 168, 83, 0.1)';
-                icon = '🟢';
+                icon = 'check-circle';
+                advice = "Voie libre. C'est le bon moment pour partir !";
             }
 
             // Update display in Analyse section
             if (valEl) {
-                valEl.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; font-size: 1.2rem; font-weight: 700;">
-                    <span style="font-size: 2rem;">${icon}</span>
-                    <div style="color: ${color};">${normalizedStatus.toUpperCase()}</div>
-                </div>`;
+                let html = `
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        ${city ? `<div style="font-size: 1.1rem; font-weight: 600; color: var(--text);">📍 ${city}</div>` : ''}
+                        <div style="display: flex; align-items: center; gap: 12px; font-size: 1.4rem; font-weight: 700;">
+                            <i data-lucide="${icon}" style="width: 32px; height: 32px; color: ${color};"></i>
+                            <div style="color: ${color};">${normalizedStatus.toUpperCase()}</div>
+                        </div>
+                        <div style="padding: 12px; background: ${bgColor}; border-radius: 8px; border-left: 4px solid ${color};">
+                            <div style="font-size: 0.9rem; font-weight: 600; margin-bottom: 4px;">Conseil IA :</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.4;">${advice}</div>
+                        </div>
+                    </div>
+                `;
+
                 if (isFallback) {
-                    valEl.innerHTML += `<div style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">(Estimation basée sur les tendances historiques)</div>`;
+                    html += `<div style="font-size: 0.75rem; color: #94a3b8; margin-top: 12px; text-align: right;">(Basé sur les tendances historiques)</div>`;
                 }
+                valEl.innerHTML = html;
+                lucide.createIcons();
             }
 
-            // Update Status Card in Itinéraires section
+            // Update Status Card in Itinéraires section (keep sync)
             const statusCard = document.getElementById('current-status-card');
             const statusText = document.getElementById('status-text');
             const statusIcon = document.getElementById('status-icon');
@@ -1630,52 +1815,138 @@
             if (statusCard) {
                 statusText.innerText = normalizedStatus.toUpperCase();
                 statusText.style.color = color;
-                statusIcon.innerText = icon;
+                statusIcon.setAttribute('data-lucide', icon);
+                statusIcon.style.color = color;
                 statusCard.style.borderLeft = `4px solid ${color}`;
-            }
-
-            if (userMarker) {
-                userMarker.getPopup().setContent(`<b>Status: ${normalizedStatus}</b>`).openOn(map);
+                lucide.createIcons();
             }
         }
 
         async function performPrediction() {
-            const coordsInput = document.getElementById('coords-display');
-            if (!coordsInput || !coordsInput.value) return;
-
             const form = document.getElementById('predict-form');
+            const cityInput = document.getElementById('city-input');
+            const coordsInput = document.getElementById('coords-display');
+
+            let city = "";
+
+            // Handle City Input
+            if (cityInput && cityInput.value.trim() !== "") {
+                city = cityInput.value.trim();
+                try {
+                    // Geocode city
+                    const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(city)}`);
+                    const geoData = await geoRes.json();
+
+                    if (geoData && geoData.length > 0) {
+                        const lat = parseFloat(geoData[0].lat);
+                        const lng = parseFloat(geoData[0].lon);
+                        coordsInput.value = `${lat},${lng}`;
+
+                        // Center map on result
+                        map.flyTo([lat, lng], 13);
+                    } else {
+                        alert("Ville introuvable. Veuillez vérifier l'orthographe.");
+                        return;
+                    }
+                } catch (e) {
+                    console.error("Geocoding error:", e);
+                    alert("Erreur lors de la recherche de la ville.");
+                    return;
+                }
+            } else if (!coordsInput.value) {
+                alert("Veuillez entrer une ville ou sélectionner un point sur la carte.");
+                return;
+            }
+
+            // Prepare Data
             const formData = new FormData(form);
 
             try {
                 const res = await fetch('/predict/', { method: 'POST', body: formData });
                 const data = await res.json();
 
-                if (data.prediction) {
-                    showPrediction(data.prediction, false);
+                // Get prediction or fallback
+                let prediction = data.prediction;
+                let isFallback = false;
+
+                if (!prediction) {
+                    prediction = getTimeBasedTrafficLevel();
+                    isFallback = true;
+                }
+
+                showPrediction(prediction, isFallback, city);
+
+                // Spawn traffic visualization
+                if (coordsInput.value) {
                     const latLng = coordsInput.value.split(',').map(Number);
-                    const level = data.prediction.toLowerCase().includes('élevé') || data.prediction.toLowerCase().includes('eleve') ? 'high' :
-                        (data.prediction.toLowerCase().includes('moyen') ? 'medium' : 'low');
-                    spawnTraffic(latLng[0], latLng[1], level);
-                    updateTrafficChart(latLng[0], latLng[1]);
-                } else {
-                    const fallback = getTimeBasedTrafficLevel();
-                    showPrediction(fallback, true);
-                    const latLng = coordsInput.value.split(',').map(Number);
-                    const level = fallback.toLowerCase().includes('élevé') ? 'high' : (fallback.toLowerCase().includes('moyen') ? 'medium' : 'low');
+                    const level = prediction.toLowerCase().includes('élevé') || prediction.toLowerCase().includes('eleve') ? 'high' :
+                        (prediction.toLowerCase().includes('moyen') ? 'medium' : 'low');
                     spawnTraffic(latLng[0], latLng[1], level);
                     updateTrafficChart(latLng[0], latLng[1]);
                 }
+
             } catch (err) {
                 console.error('Prediction error:', err);
-                showPrediction(getTimeBasedTrafficLevel(), true);
+                showPrediction(getTimeBasedTrafficLevel(), true, city);
             }
         }
 
         // Event Listeners
-        map.on('click', async (e) => {
-            await updatePositionInfo(e.latlng.lat, e.latlng.lng);
-            performPrediction();
-        });
+        let selectionMode = null; // 'start' or 'end'
+        let selectionMarkers = { start: null, end: null };
+
+        function toggleMapSelection(mode) {
+            console.log("toggleMapSelection called with:", mode);
+            selectionMode = (selectionMode === mode) ? null : mode;
+            console.log("New selectionMode:", selectionMode);
+
+            // UI Feedback
+            document.querySelectorAll('.map-select-btn').forEach(btn => btn.classList.remove('active'));
+            if (selectionMode) {
+                const btnIndex = mode === 'start' ? 0 : 1;
+                const btns = document.querySelectorAll('.map-select-btn');
+                if (btns[btnIndex]) btns[btnIndex].classList.add('active');
+                L.DomUtil.addClass(map._container, 'crosshair-cursor');
+                alert(`Cliquez sur la carte pour définir le point de ${mode === 'start' ? 'départ' : 'destination'}.`);
+            } else {
+                L.DomUtil.removeClass(map._container, 'crosshair-cursor');
+            }
+        }
+
+        }
+
+        function initMapInteraction() {
+            if (!map) return;
+            map.on('click', async (e) => {
+                // alert("Map Clicked: " + e.latlng); // Debug trigger
+                if (selectionMode) {
+                    const lat = e.latlng.lat;
+                    const lng = e.latlng.lng;
+
+                    // Get approx address
+                    const name = await getPlaceName(lat, lng) || `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+                    const inputId = selectionMode === 'start' ? 'start-input' : 'end-input';
+                    document.getElementById(inputId).value = name;
+
+                    // Visual Marker
+                    if (selectionMarkers[selectionMode]) map.removeLayer(selectionMarkers[selectionMode]);
+
+                    const color = selectionMode === 'start' ? '#34A853' : '#EA4335';
+                    selectionMarkers[selectionMode] = L.circleMarker([lat, lng], {
+                        color: color, fillColor: color, fillOpacity: 1, radius: 8
+                    }).addTo(map);
+
+                    // Reset
+                    toggleMapSelection(selectionMode); // Turn off
+                    return; // Stop other click handlers
+                }
+
+                await updatePositionInfo(e.latlng.lat, e.latlng.lng);
+                performPrediction();
+            });
+        }
+
+
 
         document.getElementById('map-search').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') searchLocation(e.target.value);
@@ -1701,10 +1972,7 @@
             }
         }
 
-        document.getElementById('predict-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            performPrediction();
-        });
+
 
         // Animation Loop for Real Routes
         function animate() {
@@ -1970,17 +2238,17 @@
             const notif = document.createElement('div');
             notif.className = 'notification';
 
-            const icons = { 'warning': '⚠️', 'error': '🚫', 'success': '✅', 'info': '💡' };
+            const icons = { 'warning': 'alert-triangle', 'error': 'octagon', 'success': 'check-circle', 'info': 'info' };
 
             notif.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="notif-icon">${icons[type] || '🔔'}</span>
+                    <i data-lucide="${icons[type] || 'bell'}" class="notif-icon"></i>
                     <div style="font-size: 0.85rem; line-height: 1.4;">${message}</div>
                 </div>
                 <button class="notif-btn" onclick="goToIncident(${lat}, ${lng}, this.parentElement)">Voir</button>
             `;
-
             container.appendChild(notif);
+            lucide.createIcons();
 
             // Auto-hide after 8 seconds
             setTimeout(() => {
@@ -2076,12 +2344,15 @@
             container.innerHTML = favorites.map(fav => `
                 <div onclick="useRoute('${fav.source}', '${fav.destination}')" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer; transition: background 0.2s; display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: var(--warning);">★</span>
+                        <i data-lucide="star" style="width: 14px; height: 14px; color: var(--warning);"></i>
                         <span style="font-size: 0.9rem; font-weight: 500;">${fav.name}</span>
                     </div>
-                    <button onclick="deleteFavorite(event, ${fav.id})" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1.1rem; padding: 0 4px;">&times;</button>
+                    <button onclick="deleteFavorite(event, ${fav.id})" style="background: none; border: none; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 4px;">
+                        <i data-lucide="x" style="width: 14px; height: 14px;"></i>
+                    </button>
                 </div>
             `).join('');
+            lucide.createIcons();
         }
 
         function updateHistoryList(history) {
@@ -2097,12 +2368,13 @@
             container.innerHTML = history.map(item => `
                 <div onclick="useRoute('${item.source}', '${item.destination}')" style="padding: 8px 12px; background: rgba(255, 255, 255, 0.03); border-radius: 8px; cursor: pointer; transition: background 0.2s;">
                     <div style="font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
-                        <span>🕒</span>
+                        <i data-lucide="clock" style="width: 12px; height: 12px;"></i>
                         <span>${new Date(item.timestamp).toLocaleDateString()}</span>
                     </div>
                     <div style="font-size: 0.9rem; margin-top: 2px;">${item.source} ➝ ${item.destination}</div>
                 </div>
             `).join('');
+            lucide.createIcons();
         }
 
         function useRoute(source, destination) {
@@ -2159,6 +2431,8 @@
             }
         }
 
+        // Initial Lucide icons call
+        lucide.createIcons();
     </script>
 </body>
 

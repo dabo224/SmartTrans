@@ -10,256 +10,311 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --primary: #4285F4;
-            --secondary: #34A853;
+            --primary: #2D6A4F;
+            --primary-light: #40916C;
+            --secondary: #212529;
             --warning: #FBBC05;
             --danger: #EA4335;
-            --bg: #0f172a;
-            --glass: rgba(255, 255, 255, 0.05);
-            --glass-active: rgba(255, 255, 255, 0.1);
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.75);
+            --bg-body: #F8F9FA;
+            --bg-sidebar: #FFFFFF;
+            --bg-card: #FFFFFF;
+            --text-main: #1A1C1E;
+            --text-muted: #6C757D;
+            --border: #E9ECEF;
+            --shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --sidebar-width: 260px;
+            --topbar-height: 64px;
+        }
+
+        * {
+            box-sizing: border-box;
         }
 
         body {
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
+            font-family: 'Outfit', -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             height: 100vh;
             width: 100vw;
+            display: flex;
             overflow: hidden;
         }
 
-        #map-container {
-            position: absolute;
-            top: 56px;
-            left: 0;
-            right: 0;
-            bottom: 0;
+        .app-container {
+            display: flex;
             width: 100%;
-            height: calc(100vh - 56px);
-        }
-
-        #map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
             height: 100%;
-            width: 100%;
-            z-index: 1;
         }
 
-        /* Google Maps Floating Search Bar */
-        .search-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
             z-index: 1000;
-            width: 380px;
-            background: rgba(15, 23, 42, 0.6);
-            -webkit-backdrop-filter: blur(20px) saturate(180%);
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            padding: 6px 16px;
-            transition: all 0.3s ease;
         }
 
-        .search-container:focus-within {
-            background: rgba(15, 23, 42, 0.85);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.3);
-            transform: translateY(-2px);
-        }
-
-        .search-container input {
-            border: none;
-            padding: 12px;
-            flex-grow: 1;
-            font-size: 15px;
-            background: transparent;
-            outline: none;
-            color: var(--text);
-            font-family: inherit;
-        }
-
-        .search-container input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .search-icon {
-            padding: 8px;
-            color: var(--text-muted);
-            cursor: pointer;
-            font-size: 1.1rem;
-            transition: color 0.3s;
-        }
-
-        .directions-btn {
-            padding: 8px;
-            color: var(--primary);
-            cursor: pointer;
-            font-size: 1.4rem;
-            transition: all 0.3s;
-            margin-left: 12px;
-            filter: drop-shadow(0 0 8px rgba(66, 133, 244, 0.4));
-        }
-
-        .directions-btn:hover {
-            transform: scale(1.1) rotate(-15deg);
-        }
-
-        /* Sidebar / Details Panel with Glassmorphism */
-        .side-panel {
-            position: absolute;
-            top: 90px;
-            left: 20px;
-            z-index: 999;
-            width: 380px;
-            max-height: calc(100vh - 120px);
-            background: rgba(15, 23, 42, 0.75);
-            -webkit-backdrop-filter: blur(30px) saturate(200%);
-            backdrop-filter: blur(30px) saturate(200%);
-            border-radius: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            overflow-y: auto;
-            transform: translateX(0);
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-        }
-
-        .side-panel.hidden {
-            transform: translateX(-450px) scale(0.9);
-            opacity: 0;
-        }
-
-        .panel-content {
-            padding: 28px;
-        }
-
-        .panel-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .panel-header h2 {
-            margin: 0;
-            font-size: 1.5rem;
+        .sidebar-logo {
+            padding: 16px 24px;
             font-weight: 700;
-            background: linear-gradient(to right, white, #94a3b8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 1.4rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            height: var(--topbar-height);
         }
 
-        .close-panel {
-            cursor: pointer;
+        .sidebar-nav {
+            flex-grow: 1;
+            padding: 20px 16px;
+        }
+
+        .nav-group {
+            margin-bottom: 24px;
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            font-weight: 600;
             color: var(--text-muted);
-            transition: color 0.2s;
-            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            padding-left: 12px;
         }
 
-        .close-panel:hover {
-            color: white;
-        }
-
-        .user-top-bar {
-            background: rgba(15, 23, 42, 0.8);
-            -webkit-backdrop-filter: blur(12px) saturate(180%);
-            backdrop-filter: blur(12px) saturate(180%);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow);
+        .nav-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            position: absolute;
-            top: 12px;
-            right: 12px;
-            z-index: 1000;
-            transition: all 0.3s;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            margin-bottom: 4px;
         }
 
-        .user-top-bar:hover {
-            background: rgba(15, 23, 42, 0.95);
+        .nav-item:hover {
+            background: #F1F3F5;
+        }
+
+        .nav-item.active {
+            background: rgba(45, 106, 79, 0.1);
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.2rem;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            height: var(--topbar-height);
+            background: var(--bg-sidebar);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 32px;
+            z-index: 999;
+        }
+
+        .top-bar-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .year-selector {
+            background: #F1F3F5;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .top-bar-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 36px;
+            height: 36px;
             background: var(--primary);
             color: white;
-            border-radius: 50%;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 0.8rem;
         }
 
-        .logout-link {
-            text-decoration: none;
-            color: var(--danger);
-            font-size: 0.8rem;
-            font-weight: 600;
-            padding: 4px 8px;
-            border-radius: 4px;
-            transition: background 0.2s;
+        /* Content Area & Sections */
+        .content-area {
+            flex-grow: 1;
+            padding: 32px;
+            overflow-y: auto;
+            position: relative;
+            background: var(--bg-body);
         }
 
-        .logout-link:hover {
-            background: rgba(234, 67, 53, 0.1);
+        .app-section {
+            display: none;
         }
 
-        /* Form Styling */
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        label {
+        .app-section.active {
             display: block;
-            margin-bottom: 0.6rem;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Page Components */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 8px 0;
+            color: var(--text-main);
+        }
+
+        .page-subtitle {
             color: var(--text-muted);
+            margin: 0;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: transform 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card .label {
             font-size: 0.8rem;
+            color: var(--text-muted);
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
 
-        input[type="number"],
-        input[type="text"],
-        select {
-            width: 100%;
-            padding: 14px 16px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            font-family: inherit;
-            box-sizing: border-box;
-            background: rgba(0, 0, 0, 0.2);
-            color: var(--text);
-            font-size: 0.95rem;
-            transition: all 0.3s;
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 8px 0;
+            color: var(--primary);
         }
 
-        input:focus,
-        select:focus {
-            background: rgba(0, 0, 0, 0.4);
-            outline: none;
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-light);
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: #FFFFFF;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text-main);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(66, 133, 244, 0.25);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+
+            input:focus,
+            select:focus {
+                background: #fff;
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.1);
+            }
         }
 
         .btn-predict {
@@ -821,183 +876,251 @@
 </head>
 
 <body>
-    <!-- User Top Bar -->
-    <div class="user-top-bar"
-        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); position: fixed; top: 0; left: 0; right: 0; z-index: 1000; color: white; height: 56px; box-sizing: border-box;">
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <div
-                style="width: 32px; height: 32px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-                {{ user.username|first|upper }}
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <span class="nav-icon">📊</span> SmartTrans
             </div>
-            <div style="text-align: left;">
-                <div style="font-weight: 600; font-size: 0.9rem;">{{ user.username }}</div>
-                <div style="font-size: 0.75rem; color: var(--text-muted);">Compte SMT</div>
-            </div>
-        </div>
-        <a href="{% url 'logout' %}" class="logout-link"
-            style="color: var(--primary); text-decoration: none; font-size: 0.85rem; font-weight: 600;">Déconnexion</a>
-    </div>
 
-    <div id="map-container">
-        <div id="map"></div>
-
-        <div id="notification-container"></div>
-
-        <!-- Google-style Search Bar -->
-        <div class="search-container">
-            <div class="search-box">
-                <input type="text" id="map-search" placeholder="Rechercher un lieu ou une route...">
-                <button onclick="toggleTrafficLayer()" title="Trafic"
-                    style="background: none; border: none; font-size: 1.2rem; cursor: pointer; margin-left: 8px;">🚦</button>
-            </div>
-            <div class="directions-btn" onclick="toggleSidePanel()" title="Directions">🚀</div>
-        </div>
-
-        <!-- Floating Side Panel (Places & Predictions) -->
-        <div id="side-panel" class="side-panel">
-            <div class="panel-content">
-                <div class="panel-header">
-                    <h2 id="place-name-display">Smart Navigation</h2>
-                    <div class="close-panel" onclick="toggleSidePanel()">✕</div>
+            <nav class="sidebar-nav">
+                <div class="nav-group">
+                    <div class="nav-label">Menu Principal</div>
+                    <div class="nav-item active" onclick="switchAppSection('principal')">
+                        <span class="nav-icon">🏠</span> <span>Principal</span>
+                    </div>
+                    <div class="nav-item" onclick="switchAppSection('itineraires')">
+                        <span class="nav-icon">🗺️</span> <span>Itinéraires</span>
+                    </div>
+                    <div class="nav-item" onclick="switchAppSection('analyse')">
+                        <span class="nav-icon">📈</span> <span>Analyse</span>
+                    </div>
                 </div>
 
-                <div class="panel-tabs">
-                    <button id="tab-point" class="tab-btn active" onclick="switchTab('point')">Analyse Point</button>
-                    <button id="tab-route" class="tab-btn" onclick="switchTab('route')">Itinéraire IA</button>
+                <div class="nav-group">
+                    <div class="nav-label">Paramètres</div>
+                    <div class="nav-item" onclick="switchAppSection('autres')">
+                        <span class="nav-icon">⚙️</span> <span>Réglages</span>
+                    </div>
+                </div>
+            </nav>
+
+            <div style="padding: 20px; border-top: 1px solid var(--border);">
+                <a href="{% url 'logout' %}" class="btn-primary"
+                    style="display: block; text-align: center; text-decoration: none; background: #dc3545;">Déconnexion</a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-layout">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <div
+                        style="display: flex; align-items: center; gap: 12px; font-weight: 600; color: var(--primary);">
+                        <span id="section-title-display">Tableau de Bord</span>
+                    </div>
                 </div>
 
-                <div id="route-section" class="tab-content">
-                    <div class="form-group">
-                        <label>Départ</label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="start-input" placeholder="Lieu de départ (ou Ma position)">
-                            <button onclick="setStartToCurrent()" class="btn-predict"
-                                style="width: auto; padding: 0 12px; margin: 0; height: 46px;">🎯</button>
+                <div class="top-bar-right">
+                    <div class="user-profile">
+                        <div style="text-align: right;">
+                            <div style="font-weight: 600; font-size: 0.9rem;">{{ user.username }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Administrateur</div>
+                        </div>
+                        <div class="user-avatar">{{ user.username|first|upper }}</div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <section class="content-area">
+                <div id="notification-container"></div>
+
+                <!-- Section: Principal -->
+                <div id="section-principal" class="app-section active">
+                    <div class="page-header">
+                        <h1 class="page-title">Statistiques Globales</h1>
+                        <p class="page-subtitle">Vue d'ensemble du trafic et des opérations en temps réel.</p>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="card stat-card">
+                            <div class="label">Véhicules Actifs</div>
+                            <div class="value">124</div>
+                            <div style="font-size: 0.8rem; color: #2D6A4F; font-weight: 600;">↑ 12% vs hier</div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="label">Temps Moyen</div>
+                            <div class="value">28 min</div>
+                            <div style="font-size: 0.8rem; color: #EA4335; font-weight: 600;">↓ 4% vs hier</div>
+                        </div>
+                        <div class="card stat-card">
+                            <div class="label">Incidents</div>
+                            <div class="value">3</div>
+                            <div style="font-size: 0.8rem; color: #FBBC05; font-weight: 600;">Attention</div>
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Destination</label>
-                        <input type="text" id="end-input" placeholder="Lieu d'arrivée">
-                    </div>
-                    <button onclick="calculateSmartRoute()" class="btn-predict">Calculer Trajet Intelligent</button>
 
-                    <div id="route-info" class="route-summary-box">
+                    <div class="card">
                         <div
-                            style="font-size: 0.75rem; color: var(--primary); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px;">
-                            Optimisation IA</div>
-                        <div id="route-summary" style="font-size: 0.95rem; line-height: 1.5;">Prêt pour le calcul...
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h3 style="margin: 0;">Tendances de Trafic Hebdomadaire</h3>
+                            <button class="btn-primary" style="padding: 8px 16px; font-size: 0.85rem;">Rapport
+                                Complet</button>
+                        </div>
+                        <div style="height: 350px;">
+                            <canvas id="mainTrafficChart"></canvas>
                         </div>
                     </div>
                 </div>
 
-                <div id="prediction-section" class="tab-content active">
-                    <!-- Prominent Status Card -->
-                    <div id="current-status-card" class="status-card">
-                        <div class="status-glow" id="status-card-glow"></div>
-                        <div class="status-badge" id="status-badge-text">Statut en direct</div>
-                        <div class="status-level">
-                            <span id="status-icon">🔍</span>
-                            <span id="status-text">Analyse...</span>
-                        </div>
-                        <div id="status-location"
-                            style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                            Sélectionnez un point sur la carte
-                        </div>
-                    </div>
+                <!-- Section: Itinéraires -->
+                <div id="section-itineraires" class="app-section">
+                    <div id="itineraires-layout"
+                        style="display: grid; grid-template-columns: 380px 1fr; gap: 24px; height: calc(100vh - 160px);">
+                        <div class="itineraires-sidebar">
+                            <div class="card" style="height: 100%; display: flex; flex-direction: column;">
+                                <h3 style="margin-top: 0;">Itinéraire Intelligent</h3>
+                                <p
+                                    style="font-size: 0.9rem; color: var(--text-muted); margin-top: -10px; margin-bottom: 24px;">
+                                    L'IA optimise votre trajet en temps réel.</p>
 
-                    <div class="form-group">
-                        <label>Explorer par niveau de trafic</label>
-                        <div style="display: flex; gap: 8px;">
-                            <input type="text" id="traffic-search" placeholder="Ex: faible, moyen, élevé"
-                                style="flex-grow: 1;">
-                            <button onclick="searchTrafficLevel()" class="btn-predict"
-                                style="width: auto; padding: 0 16px; border-radius: 4px;">🔍</button>
-                        </div>
-                        <small>Affiche les zones correspondantes sur la carte.</small>
-                    </div>
+                                <div class="form-group">
+                                    <label>Départ</label>
+                                    <div style="display: flex; gap: 8px;">
+                                        <input type="text" id="start-input" placeholder="Point de départ">
+                                        <button onclick="setStartToCurrent()" class="btn-primary"
+                                            style="padding: 0 12px; height: 46px;">🎯</button>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label>Destination</label>
+                                    <input type="text" id="end-input" placeholder="Où allez-vous ?">
+                                </div>
 
-                    <form id="predict-form">
-                        {% csrf_token %}
-                        <input type="hidden" id="coords-display" name="coords-display">
-                        <div class="form-group">
-                            <label>Heure d'analyse (0-23)</label>
-                            <input type="number" id="hour" name="hour" min="0" max="23" value="18">
-                        </div>
-                        <div class="form-group">
-                            <label>Jour de la semaine</label>
-                            <select id="day_of_week" name="day_of_week">
-                                <option value="0">Lundi</option>
-                                <option value="1">Mardi</option>
-                                <option value="2">Mercredi</option>
-                                <option value="3">Jeudi</option>
-                                <option value="4" selected>Vendredi</option>
-                                <option value="5">Samedi</option>
-                                <option value="6">Dimanche</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Vitesse souhaitée (km/h)</label>
-                            <input type="number" id="avg_speed" name="avg_speed" value="30" min="5" max="120">
-                        </div>
-                        <button type="submit" class="btn-predict">Analyser le Trafic</button>
-                    </form>
+                                <button onclick="calculateSmartRoute()" class="btn-primary"
+                                    style="width: 100%; margin-top: 8px;">Calculer le Trajet IA</button>
 
-                    <div id="training-alert"
-                        style="{% if model_exists %}display: none;{% else %}display: block;{% endif %}">
-                        ⚠️ Le modèle IA n'est pas encore prêt.
-                        <button onclick="trainModel()" class="btn-predict"
-                            style="margin-top: 12px; padding: 8px; font-size: 0.8rem; background: var(--warning); color: #0f172a;">Générer
-                            & Entraîner</button>
-                    </div>
+                                <div id="route-info" class="route-summary-box" style="margin-top: 24px; flex-grow: 1;">
+                                    <div id="route-summary" style="font-size: 0.95rem;">Prêt pour le calcul...</div>
+                                </div>
 
-                    <div id="result-box" style="transition: all 0.3s ease;">
-                        <div
-                            style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700; letter-spacing: 0.08em; margin-bottom: 8px; text-transform: uppercase;">
-                            Réponse de l'IA</div>
-                        <div id="prediction-value" style="font-size: 1.1rem; line-height: 1.4;">Cliquez sur la carte ou
-                            utilisez 🎯 pour commencer</div>
-                    </div>
+                                <div class="status-card show" id="current-status-card"
+                                    style="margin-top: auto; background: #F8F9FA;">
+                                    <div class="status-badge" style="background: var(--primary); color: white;">Direct
+                                    </div>
+                                    <div class="status-level">
+                                        <span id="status-icon">🔍</span>
+                                        <span id="status-text" style="font-size: 1.1rem;">Prêt</span>
+                                    </div>
+                                    <div id="status-location"
+                                        style="font-size: 0.8rem; color: var(--text-muted); margin-top: 4px;">En attente
+                                        de destination</div>
+                                </div>
+                            </div>
+                        </div>
 
-                    <div id="analytics-box" class="chart-box">
-                        <div class="chart-header">
-                            <span class="chart-title">📈 Tendances sur 24h</span>
-                        </div>
-                        <div style="height: 180px; width: 100%;">
-                            <canvas id="trafficTrendChart"></canvas>
-                        </div>
-                        <div
-                            style="margin-top: 12px; font-size: 0.75rem; color: var(--text-muted); text-align: center;">
-                            Conseil : <span id="best-time-hint"
-                                style="color: var(--secondary); font-weight: 600;">Analyse en cours...</span>
+                        <div class="map-container-wrap card" style="padding: 0; position: relative; overflow: hidden;">
+                            <div id="map" style="width: 100%; height: 100%;"></div>
+                            <button class="btn-geo" onclick="locateUser()"
+                                style="bottom: 20px; right: 20px;">🎯</button>
+                            <div class="traffic-legend" style="bottom: 20px; left: 20px;">
+                                <div class="legend-item"><span class="dot low"></span> Fluide</div>
+                                <div class="legend-item"><span class="dot medium"></span> Moyen</div>
+                                <div class="legend-item"><span class="dot high"></span> Saturé</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <hr style="border: 0; border-top: 1px solid var(--border); margin: 24px 0;">
+                <!-- Section: Analyse -->
+                <div id="section-analyse" class="app-section">
+                    <div class="page-header">
+                        <h1 class="page-title">Analyse Prédictive</h1>
+                        <p class="page-subtitle">Anticipez les engorgements grâce aux prévisions historiques.</p>
+                    </div>
 
-                <div id="nearby-places-section">
-                    <h3>🏢 À proximité</h3>
-                    <div id="nearby-places-list">
-                        Cliquez sur la carte pour explorer...
+                    <div style="display: grid; grid-template-columns: 350px 1fr; gap: 32px;">
+                        <div class="card">
+                            <h3 style="margin-top: 0;">Configuration</h3>
+                            <form id="predict-form">
+                                {% csrf_token %}
+                                <input type="hidden" id="coords-display" name="coords-display">
+                                <div class="form-group">
+                                    <label>Heure</label>
+                                    <input type="number" id="hour" name="hour" min="0" max="23" value="18"
+                                        style="background: #F1F3F5;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Jour</label>
+                                    <select id="day_of_week" name="day_of_week" style="background: #F1F3F5;">
+                                        <option value="0">Lundi</option>
+                                        <option value="1">Mardi</option>
+                                        <option value="2">Mercredi</option>
+                                        <option value="3">Jeudi</option>
+                                        <option value="4" selected>Vendredi</option>
+                                        <option value="5">Samedi</option>
+                                        <option value="6">Dimanche</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Vitesse Cible (km/h)</label>
+                                    <input type="number" id="avg_speed" name="avg_speed" value="30"
+                                        style="background: #F1F3F5;">
+                                </div>
+                                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 12px;">Prédire
+                                    le Trafic</button>
+                            </form>
+                        </div>
+
+                        <div class="card">
+                            <h3 style="margin-top: 0;">Tableau de Prévisions</h3>
+                            <div id="result-box"
+                                style="margin-bottom: 32px; padding: 24px; background: #F8F9FA; border-radius: 16px; border: 1px dashed var(--border);">
+                                <div id="prediction-value" style="font-weight: 500; color: var(--text-muted);">
+                                    Sélectionnez une zone sur la carte (Itinéraires) pour activer l'analyse détaillée.
+                                </div>
+                            </div>
+                            <div style="height: 300px;">
+                                <canvas id="trafficTrendChart"></canvas>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Map Controls -->
-        <button class="btn-geo" onclick="locateUser()" title="Ma Position">🎯</button>
+                <!-- Section: Autres -->
+                <div id="section-autres" class="app-section">
+                    <div class="page-header">
+                        <h1 class="page-title">Mes Paramètres</h1>
+                        <p class="page-subtitle">Gérez vos préférences et consultez votre historique.</p>
+                    </div>
 
-        <div class="traffic-legend">
-            <div class="legend-item"><span class="dot low"></span> Faible</div>
-            <div class="legend-item"><span class="dot medium"></span> Moyen</div>
-            <div class="legend-item"><span class="dot high"></span> Élevé</div>
-        </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                        <div class="card">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                <h3 style="margin: 0;">⭐ Favoris</h3>
+                                <button onclick="saveFavorite()" class="btn-primary"
+                                    style="padding: 6px 12px; font-size: 0.8rem;">Enregistrer Actuel</button>
+                            </div>
+                            <div id="favorites-list">Chargement des favoris...</div>
+                        </div>
+                        <div class="card">
+                            <h3 style="margin-bottom: 20px;">🕒 Historique des Recherches</h3>
+                            <div id="history-list">Chargement de l'historique...</div>
+                        </div>
+                    </div>
+                </div>
+
+            </section>
+        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // Declare global variables
+        // Global variables
         let map;
         let userMarker = null;
         let vehicleMarkers = [];
@@ -1006,39 +1129,32 @@
         let routeStartMarker = null;
         let routeEndMarker = null;
         let trendChart = null;
+        let mainChart = null;
 
-        // Wait for DOM to be ready before initializing map
         document.addEventListener('DOMContentLoaded', function () {
             // Init Map (Google Maps Style)
             map = L.map('map', { zoomControl: false }).setView([5.3600, -4.0083], 15);
 
+            // ... (keep layer init)
             const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
                 maxZoom: 19
             });
-
             const esriLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
                 maxZoom: 19
             });
-
             const esriHybrid = L.layerGroup([esriSatellite, esriLabels]);
-
             const osmMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
                 maxZoom: 19
             });
-
-            // Default to Hybrid (Satellite + Labels)
             esriHybrid.addTo(map);
-
-            const baseMaps = {
-                "Satellite (Hybride)": esriHybrid,
-                "Plan (Classique)": osmMap
-            };
-
+            const baseMaps = { "Satellite (Hybride)": esriHybrid, "Plan (Classique)": osmMap };
             L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(map);
-
             L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+            // Init Main Chart
+            initMainChart();
 
             // Initialize other functions after map is ready
             if (typeof initRealTime === 'function') initRealTime();
@@ -1047,19 +1163,83 @@
             if (typeof fetchUserData === 'function') fetchUserData();
         });
 
-        function switchTab(tab) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        function switchAppSection(sectionId) {
+            // Update Sidebar UI
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('onclick').includes(sectionId)) {
+                    item.classList.add('active');
+                }
+            });
 
-            if (tab === 'point') {
-                document.getElementById('prediction-section').classList.add('active');
-                document.getElementById('tab-point').classList.add('active');
-                document.getElementById('place-name-display').innerText = "Analyse Point";
-            } else {
-                document.getElementById('route-section').classList.add('active');
-                document.getElementById('tab-route').classList.add('active');
-                document.getElementById('place-name-display').innerText = "Calcul d'Itinéraire";
+            // Update Sections
+            document.querySelectorAll('.app-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            const activeSection = document.getElementById(`section-${sectionId}`);
+            if (activeSection) {
+                activeSection.classList.add('active');
             }
+
+            // Update Header Title
+            const titles = {
+                'principal': 'Tableau de Bord',
+                'itineraires': 'Carte & Itinéraires',
+                'analyse': 'Analyse Prédictive IA',
+                'autres': 'Paramètres & Favoris'
+            };
+            document.getElementById('section-title-display').innerText = titles[sectionId] || 'Tableau de Bord';
+
+            // Special actions
+            if (sectionId === 'itineraires') {
+                setTimeout(() => map.invalidateSize(), 100);
+            }
+            if (sectionId === 'autres') {
+                fetchUserData();
+            }
+        }
+
+        function initMainChart() {
+            const ctx = document.getElementById('mainTrafficChart').getContext('2d');
+            const data = {
+                labels: ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'],
+                datasets: [{
+                    label: 'Volume de Trafic',
+                    data: [65, 59, 80, 81, 56, 40, 30],
+                    borderColor: '#2D6A4F',
+                    backgroundColor: 'rgba(45, 106, 79, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#2D6A4F',
+                    pointBorderWidth: 2
+                }]
+            };
+
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#f1f3f5' },
+                            ticks: { color: '#adb5bd' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#adb5bd' }
+                        }
+                    }
+                }
+            });
         }
 
         async function setStartToCurrent() {
@@ -1411,175 +1591,90 @@
 
         function showPrediction(status, isFallback) {
             const valEl = document.getElementById('prediction-value');
-            const popupEl = document.getElementById('popup-prediction');
 
-            // Normalize status (handle both Élevé and Elevé)
+            // Normalize status
             const normalizedStatus = status.replace(/Eleve/i, 'Élevé');
 
             // Map status to color and icon
             let color, icon, bgColor;
-            if (normalizedStatus === 'Élevé' || normalizedStatus.toLowerCase() === 'élevé') {
-                color = 'var(--danger)';
+            if (normalizedStatus.toLowerCase().includes('élevé') || normalizedStatus.toLowerCase().includes('eleve')) {
+                color = '#EA4335';
                 bgColor = 'rgba(234, 67, 53, 0.1)';
                 icon = '🔴';
-            } else if (normalizedStatus === 'Moyen' || normalizedStatus.toLowerCase() === 'moyen') {
-                color = 'var(--warning)';
+            } else if (normalizedStatus.toLowerCase().includes('moyen')) {
+                color = '#FBBC05';
                 bgColor = 'rgba(251, 188, 5, 0.1)';
                 icon = '🟡';
             } else {
-                color = 'var(--secondary)';
+                color = '#34A853';
                 bgColor = 'rgba(52, 168, 83, 0.1)';
                 icon = '🟢';
             }
 
-            // Update display with icon and styled text
-            // Mapping status to icon/color for popup
-            const statusLower = normalizedStatus.toLowerCase();
-            const popupIcon = statusLower.includes('élevé') || statusLower.includes('eleve') ? '🔴' :
-                (statusLower.includes('moyen') ? '🟡' : '🟢');
+            // Update display in Analyse section
+            if (valEl) {
+                valEl.innerHTML = `<div style="display: flex; align-items: center; gap: 12px; font-size: 1.2rem; font-weight: 700;">
+                    <span style="font-size: 2rem;">${icon}</span>
+                    <div style="color: ${color};">${normalizedStatus.toUpperCase()}</div>
+                </div>`;
+                if (isFallback) {
+                    valEl.innerHTML += `<div style="font-size: 0.8rem; color: #94a3b8; margin-top: 8px;">(Estimation basée sur les tendances historiques)</div>`;
+                }
+            }
 
-            valEl.innerHTML = `<span style="color:${color}">${icon}</span> <b>${normalizedStatus}</b>`;
-            valEl.style.color = color;
-            popupEl.style.background = bgColor;
-
-            // Update Status Card
+            // Update Status Card in Itinéraires section
             const statusCard = document.getElementById('current-status-card');
             const statusText = document.getElementById('status-text');
             const statusIcon = document.getElementById('status-icon');
-            const statusGlow = document.getElementById('status-card-glow');
-            const statusBadge = document.getElementById('status-badge-text');
 
             if (statusCard) {
-                statusCard.classList.add('show');
-                statusCard.style.borderLeft = `4px solid ${color}`;
                 statusText.innerText = normalizedStatus.toUpperCase();
                 statusText.style.color = color;
-                statusIcon.innerText = popupIcon;
-                statusGlow.style.background = color;
-                statusBadge.style.color = color;
-                statusBadge.style.background = bgColor;
-
-                // Pulse effect
-                statusCard.style.transform = 'scale(1.02)';
-                setTimeout(() => statusCard.style.transform = 'scale(1)', 200);
+                statusIcon.innerText = icon;
+                statusCard.style.borderLeft = `4px solid ${color}`;
             }
 
             if (userMarker) {
-                userMarker.getPopup().setContent(`
-                    <div style="min-width: 140px; padding: 4px;">
-                        <div style="font-size: 0.7rem; color: #64748b; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Analyse Trafic</div>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 1.2rem;">${popupIcon}</span>
-                            <span style="font-size: 1rem; font-weight: 700; color: #1e293b;">${normalizedStatus}</span>
-                        </div>
-                    </div>
-                `).openOn(map);
-            }
-            const resultBox = document.getElementById('result-box');
-            if (resultBox) {
-                resultBox.style.background = bgColor;
-                resultBox.style.borderColor = color;
-                resultBox.style.border = `1px solid ${color}`;
-            }
-
-            if (popupEl) {
-                popupEl.innerHTML = `${icon} Trafic : <b style="color: ${color}">${normalizedStatus}</b>`;
-            }
-
-            if (isFallback) {
-                console.warn("Using fallback prediction:", normalizedStatus);
-                valEl.innerHTML += ` <span style="font-size: 0.7rem; opacity: 0.6;">(estimation)</span>`;
+                userMarker.getPopup().setContent(`<b>Status: ${normalizedStatus}</b>`).openOn(map);
             }
         }
 
         async function performPrediction() {
-            const valEl = document.getElementById('prediction-value');
-            const popupEl = document.getElementById('popup-prediction');
-            const resultBox = document.getElementById('result-box');
             const coordsInput = document.getElementById('coords-display');
-
-            // Validate coordinates are set
-            if (!coordsInput.value || coordsInput.value.trim() === '') {
-                resultBox.style.display = 'block';
-                resultBox.classList.add('show');
-                valEl.innerHTML = '⚠️ <span style="font-weight: 600;">Cliquez sur la carte pour sélectionner un lieu</span>';
-                valEl.style.color = 'var(--warning)';
-                resultBox.style.background = 'rgba(251, 188, 5, 0.1)';
-                resultBox.style.borderColor = 'var(--warning)';
-                resultBox.style.border = '1px solid var(--warning)';
-                console.warn('No coordinates set. Please click on the map first.');
-                return;
-            }
-
-            // Sync status card location
-            const locName = document.getElementById('place-name-display').innerText;
-            const statusLoc = document.getElementById('status-location');
-            if (statusLoc) statusLoc.innerText = locName;
-
-            resultBox.style.display = 'block';
-            resultBox.classList.add('show');
-            valEl.innerText = 'Localisation & Analyse...';
-            valEl.style.color = 'var(--text-muted)';
+            if (!coordsInput || !coordsInput.value) return;
 
             const form = document.getElementById('predict-form');
             const formData = new FormData(form);
-
-            console.log('Sending prediction request with coordinates:', coordsInput.value);
-            console.log('Hour:', formData.get('hour'), 'Day:', formData.get('day_of_week'));
 
             try {
                 const res = await fetch('/predict/', { method: 'POST', body: formData });
                 const data = await res.json();
 
-                console.log('Prediction response:', data);
-
-                if (data.error) {
-                    console.error('Prediction error:', data.error);
-                    // Fallback on error
-                    showPrediction(getTimeBasedTrafficLevel(), true);
-                    return;
-                }
-
                 if (data.prediction) {
-                    console.log('Showing prediction:', data.prediction);
                     showPrediction(data.prediction, false);
-
-                    // Update map traffic markers based on prediction
                     const latLng = coordsInput.value.split(',').map(Number);
                     const level = data.prediction.toLowerCase().includes('élevé') || data.prediction.toLowerCase().includes('eleve') ? 'high' :
                         (data.prediction.toLowerCase().includes('moyen') ? 'medium' : 'low');
                     spawnTraffic(latLng[0], latLng[1], level);
-
-                    // Update analytics chart
                     updateTrafficChart(latLng[0], latLng[1]);
                 } else {
-                    console.warn('No prediction in response');
                     const fallback = getTimeBasedTrafficLevel();
                     showPrediction(fallback, true);
-
                     const latLng = coordsInput.value.split(',').map(Number);
                     const level = fallback.toLowerCase().includes('élevé') ? 'high' : (fallback.toLowerCase().includes('moyen') ? 'medium' : 'low');
                     spawnTraffic(latLng[0], latLng[1], level);
-
                     updateTrafficChart(latLng[0], latLng[1]);
                 }
             } catch (err) {
-                console.error('Network/fetch error:', err);
-                // Fallback on network/model error
+                console.error('Prediction error:', err);
                 showPrediction(getTimeBasedTrafficLevel(), true);
             }
         }
 
         // Event Listeners
         map.on('click', async (e) => {
-            // Auto-switch to point analysis tab
-            switchTab('point');
-
             await updatePositionInfo(e.latlng.lat, e.latlng.lng);
-            // Small delay to ensure coordinates are set in the hidden input
-            setTimeout(() => {
-                performPrediction(); // Auto-predict on click
-            }, 100);
+            performPrediction();
         });
 
         document.getElementById('map-search').addEventListener('keypress', (e) => {

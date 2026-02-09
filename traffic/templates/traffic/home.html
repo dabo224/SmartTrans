@@ -1,0 +1,75 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartTrans - L'Intelligence au Service de votre Mobilité</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'traffic/css/home.css' %}">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <a href="{% url 'home' %}" class="logo">
+                <span style="font-size: 1.8rem;">🌱</span> SmartTrans
+            </a>
+            <nav class="nav-links">
+                <a href="#features">Fonctionnalités</a>
+                <a href="{% url 'login' %}">Connexion</a>
+                <a href="{% url 'register' %}" class="btn btn-primary" style="padding: 10px 20px;">S'inscrire</a>
+            </nav>
+        </header>
+    </div>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Optimisez vos trajets avec <span>l'IA</span></h1>
+            <p>SmartTrans analyse le trafic en temps réel pour vous offrir les itinéraires les plus rapides et
+                intelligents à Abidjan.</p>
+            <div style="display: flex; gap: 16px; justify-content: center;">
+                <a href="{% url 'index' %}" class="btn btn-primary">Accéder au Dashboard</a>
+                <a href="#features" class="btn" style="border: 1px solid var(--primary); color: var(--primary);">En
+                    savoir plus</a>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2 style="text-align: center; margin-bottom: 60px; font-size: 2.5rem; font-weight: 800;">Pourquoi choisir
+                SmartTrans ?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Analyses Prédictives</h3>
+                    <p>Anticipez les embouteillages grâce à nos modèles de Machine Learning entraînés sur les données
+                        locales.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Itinéraires Intelligents</h3>
+                    <p>Évitez les zones rouges et gagnez du temps chaque jour avec nos recommandations optimisées.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🚀</div>
+                    <h3>Temps Réel</h3>
+                    <p>Suivez l'évolution du trafic et recevez des alertes instantanées sur les incidents majeurs.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 SmartTrans. Conçu pour fluidifier la mobilité urbaine.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

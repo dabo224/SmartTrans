@@ -17,6 +17,12 @@ from .models import SearchHistory, Favorite
 import json
 from django.views.decorators.http import require_POST
 
+def home(request):
+    """
+    Landing page view.
+    """
+    return render(request, 'traffic/home.html')
+
 @login_required(login_url='login')
 def index(request):
     """

@@ -755,6 +755,68 @@
             font-size: 1.2rem;
             min-width: 24px;
         }
+
+        /* Status Card Styles */
+        .status-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 20px;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .status-card.show {
+            display: block;
+            animation: slideInLeft 0.4s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.7rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .status-level {
+            font-size: 1.4rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-glow {
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 100px;
+            height: 100px;
+            filter: blur(40px);
+            opacity: 0.3;
+            border-radius: 50%;
+        }
     </style>
 </head>
 
@@ -829,6 +891,20 @@
                 </div>
 
                 <div id="prediction-section" class="tab-content active">
+                    <!-- Prominent Status Card -->
+                    <div id="current-status-card" class="status-card">
+                        <div class="status-glow" id="status-card-glow"></div>
+                        <div class="status-badge" id="status-badge-text">Statut en direct</div>
+                        <div class="status-level">
+                            <span id="status-icon">🔍</span>
+                            <span id="status-text">Analyse...</span>
+                        </div>
+                        <div id="status-location"
+                            style="margin-top: 6px; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            Sélectionnez un point sur la carte
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label>Explorer par niveau de trafic</label>
                         <div style="display: flex; gap: 8px;">
@@ -1366,6 +1442,28 @@
             valEl.style.color = color;
             popupEl.style.background = bgColor;
 
+            // Update Status Card
+            const statusCard = document.getElementById('current-status-card');
+            const statusText = document.getElementById('status-text');
+            const statusIcon = document.getElementById('status-icon');
+            const statusGlow = document.getElementById('status-card-glow');
+            const statusBadge = document.getElementById('status-badge-text');
+
+            if (statusCard) {
+                statusCard.classList.add('show');
+                statusCard.style.borderLeft = `4px solid ${color}`;
+                statusText.innerText = normalizedStatus.toUpperCase();
+                statusText.style.color = color;
+                statusIcon.innerText = popupIcon;
+                statusGlow.style.background = color;
+                statusBadge.style.color = color;
+                statusBadge.style.background = bgColor;
+
+                // Pulse effect
+                statusCard.style.transform = 'scale(1.02)';
+                setTimeout(() => statusCard.style.transform = 'scale(1)', 200);
+            }
+
             if (userMarker) {
                 userMarker.getPopup().setContent(`
                     <div style="min-width: 140px; padding: 4px;">
@@ -1412,6 +1510,11 @@
                 console.warn('No coordinates set. Please click on the map first.');
                 return;
             }
+
+            // Sync status card location
+            const locName = document.getElementById('place-name-display').innerText;
+            const statusLoc = document.getElementById('status-location');
+            if (statusLoc) statusLoc.innerText = locName;
 
             resultBox.style.display = 'block';
             resultBox.classList.add('show');
